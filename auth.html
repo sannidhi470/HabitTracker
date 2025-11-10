@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Habit Tracker — Sign in / Sign up</title>
+    <link rel="stylesheet" href="./styles/auth.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%234a90e2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 1 0 9-9'/%3E%3Cpath d='M3 12h9V3'/%3E%3C/svg%3E">
+    <script defer src="./scripts/auth.js"></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar" aria-label="Header">
+        <div class="brand">
+          <span class="brand-text">Habit Tracker</span>
+        </div>
+        <button id="theme-toggle" class="icon-btn" type="button" aria-pressed="false" aria-label="Toggle dark mode" title="Toggle theme">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
+          </svg>
+        </button>
+      </header>
+
+      <main class="center-wrap">
+        <section class="card" role="dialog" aria-labelledby="auth-title" aria-describedby="auth-desc">
+          <div class="card-header">
+            <h1 id="auth-title" class="title">Welcome</h1>
+            <p id="auth-desc" class="subtitle">Log in to continue or create a new account</p>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Authentication">
+            <button id="tab-login" class="tab is-active" role="tab" aria-selected="true" aria-controls="panel-login" data-tab="login">Log in</button>
+            <button id="tab-signup" class="tab" role="tab" aria-selected="false" aria-controls="panel-signup" data-tab="signup">Sign up</button>
+          </div>
+
+          <div class="providers" aria-label="Social sign-in">
+            <button class="btn provider" type="button" data-provider="google">
+              <img src="./assets/icons/google.svg" alt="" class="provider-icon" />
+              <span>Continue with Google</span>
+            </button>
+            <button class="btn provider" type="button" data-provider="microsoft">
+              <img src="./assets/icons/microsoft.svg" alt="" class="provider-icon" />
+              <span>Continue with Microsoft</span>
+            </button>
+          </div>
+
+          <div class="divider" role="separator" aria-label="or continue with email">
+            <span>or</span>
+          </div>
+
+          <section id="panel-login" class="panel" role="tabpanel" aria-labelledby="tab-login" data-panel="login">
+            <form id="login-form" class="form" novalidate>
+              <div class="field">
+                <label class="label" for="login-email">Email</label>
+                <input class="input" id="login-email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required aria-describedby="login-email-error">
+                <p id="login-email-error" class="field-error" aria-live="polite"></p>
+              </div>
+              <div class="field">
+                <div class="label-row">
+                  <label class="label" for="login-password">Password</label>
+                  <a class="link" href="#" id="forgot-link">Forgot password?</a>
+                </div>
+                <div class="input-with-action">
+                  <input class="input" id="login-password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required minlength="8" aria-describedby="login-password-error">
+                  <button class="ghost-btn toggle-password" type="button" aria-label="Show password" data-target="login-password">Show</button>
+                </div>
+                <p id="login-password-error" class="field-error" aria-live="polite"></p>
+              </div>
+
+              <div class="row between">
+                <label class="checkbox">
+                  <input type="checkbox" id="login-remember" name="remember">
+                  <span>Remember me</span>
+                </label>
+              </div>
+
+              <div class="actions">
+                <button id="login-submit" class="btn primary" type="submit">
+                  <span class="btn-label">Log in</span>
+                  <span class="spinner" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div id="login-form-msg" class="form-msg" aria-live="polite"></div>
+            </form>
+          </section>
+
+          <section id="panel-signup" class="panel" role="tabpanel" aria-labelledby="tab-signup" data-panel="signup" hidden>
+            <form id="signup-form" class="form" novalidate>
+              <div class="field">
+                <label class="label" for="signup-name">Full name</label>
+                <input class="input" id="signup-name" name="name" type="text" autocomplete="name" placeholder="Alex Johnson" required aria-describedby="signup-name-error">
+                <p id="signup-name-error" class="field-error" aria-live="polite"></p>
+              </div>
+              <div class="field">
+                <label class="label" for="signup-email">Email</label>
+                <input class="input" id="signup-email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required aria-describedby="signup-email-error">
+                <p id="signup-email-error" class="field-error" aria-live="polite"></p>
+              </div>
+              <div class="field">
+                <label class="label" for="signup-password">Password</label>
+                <div class="input-with-action">
+                  <input class="input" id="signup-password" name="password" type="password" autocomplete="new-password" placeholder="At least 8 characters" required minlength="8" aria-describedby="signup-password-error signup-password-hint">
+                  <button class="ghost-btn toggle-password" type="button" aria-label="Show password" data-target="signup-password">Show</button>
+                </div>
+                <p id="signup-password-error" class="field-error" aria-live="polite"></p>
+                <p id="signup-password-hint" class="hint">Use 8+ characters with letters and numbers. Strength: <span id="pw-strength">—</span></p>
+              </div>
+
+              <label class="checkbox">
+                <input type="checkbox" id="signup-terms" name="terms" required aria-describedby="signup-terms-error">
+                <span>I agree to the <a class="link" href="#" target="_blank" rel="noopener">Terms</a> and <a class="link" href="#" target="_blank" rel="noopener">Privacy</a></span>
+              </label>
+              <p id="signup-terms-error" class="field-error" aria-live="polite"></p>
+
+              <div class="actions">
+                <button id="signup-submit" class="btn primary" type="submit">
+                  <span class="btn-label">Create account</span>
+                  <span class="spinner" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div id="signup-form-msg" class="form-msg" aria-live="polite"></div>
+            </form>
+          </section>
+        </section>
+      </main>
+
+      <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+    </div>
+  </body>
+</html>
+
+
