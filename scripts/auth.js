@@ -205,6 +205,7 @@
     const pass = qs("#login-password");
     const passErr = qs("#login-password-error");
     const submit = qs("#login-submit");
+    const msg = qs("#login-form-msg");
 
     function validate() {
       let ok = true;
@@ -227,10 +228,41 @@
       e.preventDefault();
       if (!validate()) return;
       setLoading(submit, true);
-      // Simulate async; replace with your backend call
-      await new Promise((r) => setTimeout(r, 800));
-      setLoading(submit, false);
-      showToast({ title: "Logged in", body: "Demo only — connect your backend.", type: "success" });
+      if (msg) msg.textContent = "";
+      try {
+        const payload = {
+          email: email.value.trim(),
+          password: pass.value,
+        };
+        const doRequest = (url) => fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        let response;
+        try {
+          response = await doRequest("http://localhost:8081/api/login");
+        } catch (err1) {
+          try {
+            response = await doRequest("http://127.0.0.1:8081/api/login");
+          } catch (err2) {
+            console.error("Login request failed", err1, err2);
+            throw err2;
+          }
+        }
+        if (response.status === 200) {
+          if (msg) msg.textContent = "Logged in successfully";
+        } else if (response.status === 400) {
+          if (msg) msg.textContent = "Incorrect email or password";
+        } else {
+          if (msg) msg.textContent = "Something went wrong. Please try again.";
+        }
+      } catch (err) {
+        console.error("Network or CORS error during login", err);
+        if (msg) msg.textContent = "Network error. Please try again.";
+      } finally {
+        setLoading(submit, false);
+      }
     });
 
     const forgot = qs("#forgot-link");
@@ -261,6 +293,7 @@
     const termsErr = qs("#signup-terms-error");
     const submit = qs("#signup-submit");
     const pwStrengthEl = qs("#pw-strength");
+    const msg = qs("#signup-form-msg");
 
     function validate() {
       let ok = true;
@@ -298,10 +331,42 @@
       e.preventDefault();
       if (!validate()) return;
       setLoading(submit, true);
-      // Simulate async; replace with your backend call
-      await new Promise((r) => setTimeout(r, 900));
-      setLoading(submit, false);
-      showToast({ title: "Account created", body: "Demo only — connect your backend.", type: "success" });
+      if (msg) msg.textContent = "";
+      try {
+        const payload = {
+          fullName: name.value.trim(),
+          email: email.value.trim(),
+          password: pass.value,
+        };
+        const doRequest = (url) => fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        let response;
+        try {
+          response = await doRequest("http://localhost:8081/api/signup");
+        } catch (err1) {
+          try {
+            response = await doRequest("http://127.0.0.1:8081/api/signup");
+          } catch (err2) {
+            console.error("Signup request failed", err1, err2);
+            throw err2;
+          }
+        }
+        if (response.status === 200 || response.status === 201) {
+          if (msg) msg.textContent = "User registered successfully";
+        } else if (response.status === 400) {
+          if (msg) msg.textContent = "Please log in";
+        } else {
+          if (msg) msg.textContent = "Something went wrong. Please try again.";
+        }
+      } catch (err) {
+        console.error("Network or CORS error during signup", err);
+        if (msg) msg.textContent = "Network error. Please try again.";
+      } finally {
+        setLoading(submit, false);
+      }
     });
 
     validate();
