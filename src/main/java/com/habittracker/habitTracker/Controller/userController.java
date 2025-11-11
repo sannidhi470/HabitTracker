@@ -1,5 +1,6 @@
 package com.habittracker.habitTracker.Controller;
 
+import com.habittracker.habitTracker.DTO.LoginRequest;
 import com.habittracker.habitTracker.Model.User;
 import com.habittracker.habitTracker.Service.userService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -28,10 +31,10 @@ public class userController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@RequestBody String email, @RequestBody String password){
+    public ResponseEntity<Void> login(@RequestBody LoginRequest loginRequest){
         try{
-            userService.login(email, password);
-            return ResponseEntity.status(HttpStatus.CREATED).build();
+            userService.login(loginRequest.getEmail(), loginRequest.getPassword());
+            return ResponseEntity.status(HttpStatus.OK).build();
         }
         catch(RuntimeException e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();

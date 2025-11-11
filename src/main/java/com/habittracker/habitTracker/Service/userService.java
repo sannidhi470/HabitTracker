@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class userService {
 
@@ -23,10 +25,18 @@ public class userService {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         return userrepo.save(user);
     }
-    public void login(String email, String password){
-        if(!userrepo.findByEmail(email).isPresent()){
+
+    public User login(String email, String password){
+
+        Optional<User> user = userrepo.findByEmail(email);
+        if(user.isEmpty()){
             throw new RuntimeException("Email or password incorrect");
         }
+
+        if(!bCryptPasswordEncoder.matches(password,user.get().getPassword())){
+            throw new RuntimeException("Email or password incorrect");
+        }
+        return user.get();
     }
 
 }
