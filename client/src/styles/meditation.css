@@ -1,0 +1,364 @@
+/* Meditation setup page (scoped by .meditation-page) */
+.meditation-page {
+  --text: #1f2937;
+  --muted: #475569;
+  --card: #ffffff;
+  --border: rgba(0, 0, 0, 0.12);
+  --ring: rgba(31, 41, 55, 0.18);
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  --radius: 16px;
+  --bg-image: url("../assets/backgrounds/selection-bg.jpg");
+  --welcome-bg: #a28a73; /* beige used on Auth page */
+  --on-welcome: #1f1610;
+  --on-welcome-muted: #2e241c;
+  --input-on-welcome-bg: #fbf7f2;
+  --brand-brown: #4e2203;
+
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: var(--text);
+  isolation: isolate;
+}
+
+.meditation-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(to bottom right, rgba(255,255,255,0.70), rgba(255,255,255,0.70)),
+    var(--bg-image) center/cover no-repeat,
+    #f6f3ef;
+}
+
+.meditation-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 28px 24px 8px;
+}
+.meditation-brand {
+  justify-self: center;
+  grid-column: 2;
+}
+.meditation-brand-text {
+  font-family: "Pacifico", "Brush Script MT", cursive;
+  font-size: 56px;
+  font-weight: 400;
+  color: #1f1610;
+  letter-spacing: 0.2px;
+}
+.meditation-theme-toggle {
+  grid-column: 3;
+  justify-self: end;
+}
+@media (min-width: 640px) {
+  .meditation-brand-text { font-size: 80px; }
+}
+
+.meditation-main {
+  flex: 1;
+  display: grid;
+  gap: 24px;
+  align-content: start;
+  justify-items: center;
+  padding: 24px;
+}
+.meditation-intro { text-align: center; }
+.meditation-quote {
+  margin: 0;
+}
+.meditation-quote-text {
+  margin: 0;
+  font-family: "Pacifico", "Brush Script MT", cursive;
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.25;
+  color: #1f1610;
+  letter-spacing: 0.3px;
+}
+.meditation-quote-author {
+  display: block;
+  margin-top: 8px;
+  font-style: italic;
+  color: #2e241c;
+  opacity: 0.9;
+}
+
+.meditation-card {
+  width: 100%;
+  max-width: 900px;
+  background: var(--welcome-bg);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  color: var(--on-welcome);
+  padding: 28px;
+}
+.plan-title {
+  margin: 6px 0 16px 0;
+  font-size: 18px;
+  color: var(--on-welcome);
+  text-align: center;
+}
+
+.meditation-form {
+  display: grid;
+  gap: 16px;
+}
+.grid {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.field {
+  display: grid;
+  gap: 8px;
+}
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-welcome);
+}
+.input, .select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  background: var(--input-on-welcome-bg);
+  color: var(--on-welcome);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  accent-color: var(--brand-brown);
+}
+.input:focus, .select:focus {
+  outline: none;
+  border-color: var(--brand-brown);
+  box-shadow: 0 0 0 4px rgba(78, 34, 3, 0.20);
+}
+/* Tint the calendar icon on WebKit browsers to the brand brown */
+.input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(20%) sepia(18%) saturate(978%) hue-rotate(346deg) brightness(91%) contrast(90%);
+  cursor: pointer;
+}
+.inline {
+  display: grid;
+  grid-template-columns: 1fr 130px;
+  gap: 10px;
+}
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 16px;
+  color: var(--on-welcome);
+  font-size: 14px;
+}
+.mode-fieldset {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--welcome-bg), white 12%);
+}
+.mode-fieldset legend {
+  padding: 0 6px;
+  margin-right: 4px;
+  font-size: 15px; /* slightly larger for emphasis */
+}
+.hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--on-welcome-muted);
+}
+.radio input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--brand-brown);
+  vertical-align: middle;
+}
+.radio span {
+  line-height: 1.1;
+}
+.actions {
+  display: grid;
+}
+.btn {
+  appearance: none;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: var(--card);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease, background 0.2s ease;
+}
+.btn:hover {
+  border-color: var(--brand-brown);
+  box-shadow: 0 0 0 4px rgba(78, 34, 3, 0.20);
+}
+.btn:active { transform: translateY(1px); }
+.primary {
+  background: #5a4333;
+  border-color: #5a4333;
+  color: #fff;
+}
+.primary:hover {
+  background: #5a4333;
+  border-color: #5a4333;
+  box-shadow: 0 0 0 6px rgba(78, 34, 3, 0.20);
+}
+
+/* Minimal icon button for header (copied from selection look) */
+.icon-btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  padding: 8px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease, background 0.2s ease;
+}
+.icon-btn:hover { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25); }
+.icon-btn:active { transform: translateY(1px); }
+.icon { width: 18px; height: 18px; fill: currentColor; }
+
+/* Toast container hook (reuses shapes from Auth) */
+.toast-container {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: grid;
+  gap: 10px;
+  z-index: 1000;
+}
+.toast {
+  background: #fff;
+  color: #111827;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-left: 4px solid #4f46e5;
+  padding: 12px 14px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 4px;
+  min-width: 240px;
+}
+.toast.success { border-left-color: #10b981; }
+.toast.error { border-left-color: #dc2626; }
+.toast-title { font-weight: 700; font-size: 13px; }
+.toast-body { font-size: 13px; color: #475569; }
+
+/* Custom brown date picker */
+.date-field { position: relative; }
+.date-trigger { text-align: left; }
+.calendar {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 0;
+  background: color-mix(in srgb, var(--welcome-bg), white 8%);
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 12px;
+  color: var(--on-welcome);
+  min-width: 260px;
+}
+.cal-header {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.cal-title {
+  text-align: center;
+  font-weight: 700;
+}
+.cal-nav {
+  appearance: none;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: var(--input-on-welcome-bg);
+  color: var(--on-welcome);
+  border-radius: 8px;
+  height: 28px;
+  width: 28px;
+  line-height: 26px;
+  text-align: center;
+  cursor: pointer;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.cal-weekdays {
+  margin-bottom: 6px;
+  color: var(--on-welcome-muted);
+  font-size: 12px;
+}
+.cal-weekday { text-align: center; }
+.cal-day {
+  appearance: none;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: var(--input-on-welcome-bg);
+  color: var(--on-welcome);
+  border-radius: 8px;
+  height: 32px;
+  line-height: 30px;
+  text-align: center;
+  cursor: pointer;
+}
+.cal-day:hover { border-color: var(--brand-brown); box-shadow: 0 0 0 3px rgba(78,34,3,0.15); }
+.cal-day.is-today { outline: 2px solid rgba(78,34,3,0.35); }
+.cal-day.is-selected { background: #5a4333; color: #fff; border-color: #5a4333; }
+.cal-day.is-disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Dark mode alignment */
+@media (prefers-color-scheme: dark) {
+  .meditation-page {
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --card: #0f172a;
+    --border: rgba(255, 255, 255, 0.12);
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  }
+  .meditation-page::before {
+    background:
+      linear-gradient(to bottom right, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
+      var(--bg-image) center/cover no-repeat,
+      #0b1220;
+  }
+}
+
+[data-theme="dark"] .meditation-page {
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --card: #0f172a;
+  --border: rgba(255, 255, 255, 0.12);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .meditation-page::before {
+  background:
+    linear-gradient(to bottom right, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
+    var(--bg-image) center/cover no-repeat,
+    #0b1220;
+}
+
+
