@@ -1,4 +1,4 @@
-package com.habittracker.habitTracker.DTO;
+package com.habittracker.habitTracker.Auth.DTO;
 
 public class LoginRequest {
     private String email;

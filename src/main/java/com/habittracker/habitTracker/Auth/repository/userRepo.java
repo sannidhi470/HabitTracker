@@ -1,6 +1,6 @@
-package com.habittracker.habitTracker.repository;
+package com.habittracker.habitTracker.Auth.repository;
 
-import com.habittracker.habitTracker.Model.User;
+import com.habittracker.habitTracker.Auth.Model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

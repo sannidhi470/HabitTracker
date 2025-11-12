@@ -1,8 +1,8 @@
-package com.habittracker.habitTracker.Controller;
+package com.habittracker.habitTracker.Auth.Controller;
 
-import com.habittracker.habitTracker.DTO.LoginRequest;
-import com.habittracker.habitTracker.Model.User;
-import com.habittracker.habitTracker.Service.userService;
+import com.habittracker.habitTracker.Auth.DTO.LoginRequest;
+import com.habittracker.habitTracker.Auth.Model.User;
+import com.habittracker.habitTracker.Auth.Service.userService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,10 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/user")
 public class userController {
     @Autowired
     private userService userService;

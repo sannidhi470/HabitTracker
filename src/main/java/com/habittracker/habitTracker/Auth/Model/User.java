@@ -1,4 +1,4 @@
-package com.habittracker.habitTracker.Model;
+package com.habittracker.habitTracker.Auth.Model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,14 +10,19 @@ import jdk.jfr.Enabled;
 @Table(name="users")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+    @Column(nullable = false, unique = true)
     private String email;
+    @Column(nullable = false)
     private String password;
+    @Column(nullable = false)
     private String fullName;
     public User(String email, String password, String fullName) {
+
         this.email = email;
         this.password = password;
+        this.fullName = fullName;
     }
 
     public User() {

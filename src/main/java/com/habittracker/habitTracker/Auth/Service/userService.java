@@ -1,7 +1,7 @@
-package com.habittracker.habitTracker.Service;
+package com.habittracker.habitTracker.Auth.Service;
 
-import com.habittracker.habitTracker.Model.User;
-import com.habittracker.habitTracker.repository.userRepo;
+import com.habittracker.habitTracker.Auth.Model.User;
+import com.habittracker.habitTracker.Auth.repository.userRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
