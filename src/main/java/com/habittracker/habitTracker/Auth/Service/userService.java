@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -37,6 +38,18 @@ public class userService {
             throw new RuntimeException("Email or password incorrect");
         }
         return user.get();
+    }
+
+    public User getUserById(Long id){
+        Optional<User> user = userrepo.findById(id);
+        if(user.isEmpty()){
+            throw new RuntimeException("User not found");
+        }
+        return user.get();
+    }
+
+    public List<User> getAllUsers(){
+        return userrepo.findAll();
     }
 
 }

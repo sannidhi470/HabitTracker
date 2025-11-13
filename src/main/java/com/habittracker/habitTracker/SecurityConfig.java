@@ -23,7 +23,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ✅ allow preflight
                         .requestMatchers("/api/signup", "/api/login").permitAll()
                         .requestMatchers("/api/habit/addHabit","/api/habit/getAllHabits","/api/habit/getHabitName","/api/habit/getHabitId","/api/habit/deleteHabit").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/userhabit/addHabitToUser").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/api/habit/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/userhabit/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/userhabit/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/user/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/user/**").permitAll()
                         .anyRequest().authenticated()
                 );
 

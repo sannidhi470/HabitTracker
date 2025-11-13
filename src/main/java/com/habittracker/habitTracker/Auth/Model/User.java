@@ -11,7 +11,7 @@ import jdk.jfr.Enabled;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     @Column(nullable = false, unique = true)
     private String email;
     @Column(nullable = false)
@@ -46,6 +46,12 @@ public class User {
     }
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+    public long getId() {
+        return id;
+    }
+    public void setId(long id) {
+        this.id = id;
     }
 
 }

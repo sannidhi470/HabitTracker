@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class Habit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long habitId;
+    private Long habitId;
     @Column(nullable = false)
     private String key;
 

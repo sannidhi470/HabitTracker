@@ -23,7 +23,11 @@ public class habitService {
     }
 
     public Habit getHabitById(Long id){
-        return habitRepo.findById(id).get();
+        Optional<Habit> habit = habitRepo.findById(id);
+        if(habit.isEmpty()){
+            throw new RuntimeException("Habit not found");
+        }
+        return habit.get();
     }
 
     public Long getHabitId(String name)
@@ -49,6 +53,7 @@ public class habitService {
             return null;
         }
     }
+
     public void deleteHabitById(Long id) {
         if (habitRepo.existsById(id)) {
             habitRepo.deleteById(id);
