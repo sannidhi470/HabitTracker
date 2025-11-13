@@ -87,7 +87,7 @@ export async function postWithFallback(path, payload) {
 }
 
 export async function loginRequest({ email, password }) {
-  return postWithFallback('/api/login', { email, password })
+  return postWithFallback('/api/user/login', { email, password })
 }
 
 export async function signupRequest({ fullName, email, password }) {

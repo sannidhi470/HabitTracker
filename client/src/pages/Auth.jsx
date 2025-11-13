@@ -138,7 +138,7 @@ export default function Auth() {
     try {
       const res = await loginRequest({ email: loginEmail.trim(), password: loginPassword })
       if (res.status === 200) {
-        setLoginMsg('Logged in successfully')
+        navigate('/selection')
       } else if (res.status === 400) {
         setLoginMsg('Incorrect email or password')
       } else {
