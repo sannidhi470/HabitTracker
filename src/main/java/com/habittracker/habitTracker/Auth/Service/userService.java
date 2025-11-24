@@ -52,4 +52,12 @@ public class userService {
         return userrepo.findAll();
     }
 
+    public Long getUserId(String email){
+        Optional<User> user = userrepo.findByEmail(email);
+        if(user.isEmpty()){
+            throw new RuntimeException("User not found");
+        }
+        return user.get().getId();
+    }
+
 }

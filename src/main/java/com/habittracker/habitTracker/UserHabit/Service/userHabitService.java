@@ -55,6 +55,23 @@ public class userHabitService {
         return habitnames;
     }
 
+    public List<Long> getHabitIdsForUserId(Long user_id)
+    {
+        List<UserHabit> userHabits = userHabitRepo.findByUserId(user_id);
+        if(userHabits.isEmpty())
+        {
+            throw new RuntimeException("Habit not found for the user");
+        }
+        List<Long> habitIds = new ArrayList<>();
+        for(UserHabit userHabit : userHabits)
+        {
+            Habit habit = userHabit.getHabit();
+            Long habitId = habit.getHabit_id();
+            habitIds.add(habitId);
+        }
+        return habitIds;
+    }
+
     public List<UserHabit> getAllUserHabits()
     {
         List<UserHabit> userHabits = userHabitRepo.findAll();

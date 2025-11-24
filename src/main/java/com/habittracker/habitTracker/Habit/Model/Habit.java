@@ -10,13 +10,22 @@ public class Habit {
     private Long habitId;
     @Column(nullable = false)
     private String key;
+    @Column(nullable = false)
+    private String unit;
 
     public Habit() {}
-    public Habit(long habit_id, String key) {
+    public Habit(long habit_id, String key, String unit) {
         this.habitId = habit_id;
         this.key = key;
+        this.unit = unit;
     }
 
+    public String getUnit() {
+        return unit;
+    }
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
     public long getHabit_id() {
         return habitId;
     }

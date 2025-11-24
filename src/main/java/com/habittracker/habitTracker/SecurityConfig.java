@@ -25,10 +25,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/habit/addHabit","/api/habit/getAllHabits","/api/habit/getHabitName","/api/habit/getHabitId","/api/habit/deleteHabit").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/userhabit/addHabitToUser").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/api/habit/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/habit/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/habit/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/userhabit/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/userhabit/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/user/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/user/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/plan/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/plan/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/progress/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/progress/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
@@ -40,6 +46,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173", "http://127.0.0.1:5173",
+                "http://localhost:5175", "http://127.0.0.1:5175",
                 "http://localhost:8080", "http://127.0.0.1:8080"
         ));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

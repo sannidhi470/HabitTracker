@@ -1,5 +1,6 @@
 package com.habittracker.habitTracker.Auth.Controller;
 
+import com.habittracker.habitTracker.Auth.DTO.GetIdRequest;
 import com.habittracker.habitTracker.Auth.DTO.LoginRequest;
 import com.habittracker.habitTracker.Auth.Model.User;
 import com.habittracker.habitTracker.Auth.Service.userService;
@@ -44,4 +45,16 @@ public class userController {
         return ResponseEntity.ok(users);
     }
 
+    @PostMapping("/getUserId")
+    public ResponseEntity<?> getUserId(@RequestBody GetIdRequest getIdRequest){
+        try
+        {
+            Long id = userService.getUserId(getIdRequest.getEmail());
+            return ResponseEntity.ok(id);
+        }
+        catch(RuntimeException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(List.of("Error: " + e.getMessage()));
+        }
+
+    }
 }

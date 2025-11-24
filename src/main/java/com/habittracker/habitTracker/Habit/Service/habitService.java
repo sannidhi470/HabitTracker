@@ -30,6 +30,14 @@ public class habitService {
         return habit.get();
     }
 
+    public String getHabitUnit(Long id){
+        Optional<Habit> habit = habitRepo.findById(id);
+        if(habit.isEmpty()){
+            throw new RuntimeException("Habit not found");
+        }
+        return habit.get().getUnit();
+    }
+
     public Long getHabitId(String name)
     {
             Optional<Habit> habit = habitRepo.findByKey(name);
@@ -38,7 +46,7 @@ public class habitService {
                 return habit.get().getHabit_id();
             }
             else {
-                return null;
+                throw new RuntimeException("Habit not found");
             }
     }
 
@@ -50,13 +58,16 @@ public class habitService {
             return habit.get().getKey();
         }
         else {
-            return null;
+           throw new RuntimeException("Habit not found");
         }
     }
 
     public void deleteHabitById(Long id) {
         if (habitRepo.existsById(id)) {
             habitRepo.deleteById(id);
+        }
+        else {
+            throw new RuntimeException("Habit not found");
         }
 
     }

@@ -36,18 +36,50 @@ public class habitController {
     }
 
     @GetMapping("/getHabitId")
-    public Long getHabitById(@RequestParam String name){
-        return habitService.getHabitId(name);
+    public ResponseEntity<Long> getHabitById(@RequestParam String name){
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(habitService.getHabitId(name));
+        }
+        catch (RuntimeException e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
     @GetMapping("/getHabitName")
-    public String getHabitName(@RequestParam Long id){
-        return habitService.getHabitName(id);
+    public ResponseEntity<String> getHabitName(@RequestParam Long id){
+        try
+        {
+            return ResponseEntity.status(HttpStatus.OK).body(habitService.getHabitName(id));
+        }
+        catch (RuntimeException e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    @GetMapping("/getHabitUnit")
+    public ResponseEntity<String> getHabitUnit(@RequestParam Long id){
+        try {
+            String unit = habitService.getHabitUnit(id);
+            return ResponseEntity.status(HttpStatus.OK).body(unit);
+        }
+        catch (RuntimeException e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
     @DeleteMapping("/deleteHabit")
-    public void deleteHabit(@RequestParam Long id){
-        habitService.deleteHabitById(id);
+    public ResponseEntity<Void> deleteHabit(@RequestParam Long id){
+        try{
+            habitService.deleteHabitById(id);
+            return ResponseEntity.status(HttpStatus.OK).build();
+        }
+        catch (RuntimeException e)
+            {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
     }
 
 }
