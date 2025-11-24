@@ -91,7 +91,7 @@ export async function loginRequest({ email, password }) {
 }
 
 export async function signupRequest({ fullName, email, password }) {
-  return postWithFallback('/api/signup', { fullName, email, password })
+  return postWithFallback('/api/user/signup', { fullName, email, password })
 }
 
 export async function startOAuth(provider) {

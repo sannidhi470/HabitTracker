@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/workout.css'
 import { initThemeFromStorage, setTheme as applyTheme, showToast } from '../services/auth.js'
+import { getHabitIdByName, getUserIdByEmail, addHabitToUser, addPlan } from '../services/api.js'
+import { getUserEmail, saveHabitId, saveUserId } from '../services/session.js'
 
 function pad2(n) {
   return String(n).padStart(2, '0')
@@ -187,37 +189,69 @@ export default function Workout() {
     return Boolean(targetEndDate) && Number(totalMinutes) >= 1
   }, [planMode, startDate, minutesPerDay, planLengthValue, planLengthUnit, targetEndDate, totalMinutes])
 
-  const onSave = (e) => {
+  const onSave = async (e) => {
     e.preventDefault()
     if (!canSave) return
-    const payload =
-      planMode === 'fixedDailyMinutes'
-        ? {
-            habitType: 'workout',
-            planMode,
-            minutesPerDay: Number(minutesPerDay),
-            planLength: { value: Number(planLengthValue), unit: planLengthUnit },
-            startDate,
-            endDate: derivedEndDate,
+    try {
+      console.debug('[SavePlan][Workout] start')
+      const habitId = await getHabitIdByName('Workout')
+      console.debug('[SavePlan][Workout] habitId', habitId)
+      if (!Number.isFinite(habitId)) throw new Error('Invalid habit id')
+      saveHabitId(habitId)
+      const email = getUserEmail()
+      console.debug('[SavePlan][Workout] email', email)
+      if (!email) {
+        showToast({ title: 'Login required', body: 'Please log in again.', type: 'error', timeout: 2600 })
+        return
+      }
+      const userId = await getUserIdByEmail(email)
+      console.debug('[SavePlan][Workout] userId', userId)
+      if (!Number.isFinite(userId)) throw new Error('Invalid user id')
+      saveUserId(userId)
+      console.debug('[SavePlan][Workout] linking user to habit')
+      await addHabitToUser({ userId, habitId })
+      console.debug('[SavePlan][Workout] user-habit linked, creating plan')
+
+      const planType = planMode === 'fixedDailyMinutes' ? 'FIXED' : 'DEADLINE'
+      const toZ = (d) => `${d}T00:00:00.000Z`
+      const endDateIso = planMode === 'fixedDailyMinutes' ? derivedEndDate : targetEndDate
+      const planPayload = {
+        userId,
+        habitId,
+        planType,
+        startDate: toZ(startDate),
+        endDate: toZ(endDateIso),
+        planLength: planMode === 'fixedDailyMinutes' ? Number(planLengthValue) : Number(totalMinutes),
+        perDay: planMode === 'fixedDailyMinutes' ? Number(minutesPerDay) : Number(derivedMinutesPerDay),
+        unit: 'minutes',
+      }
+      const res = await addPlan(planPayload)
+      if (res.status === 200) {
+        console.debug('[SavePlan][Workout] plan created, redirecting')
+        navigate('/dashboard')
+        return
+      }
+      if (res.status === 400) {
+        let body = ''
+        try {
+          const ct = res.headers.get('content-type') || ''
+          if (ct.includes('application/json')) {
+            const j = await res.json()
+            body = typeof j === 'string' ? j : (j.message || j.error || JSON.stringify(j))
+          } else {
+            body = await res.text()
           }
-        : {
-            habitType: 'workout',
-            planMode,
-            startDate,
-            targetEndDate,
-            totalMinutes: Number(totalMinutes),
-            minutesPerDay: derivedMinutesPerDay,
-          }
-    showToast({
-      title: 'Workout plan saved',
-      body:
-        planMode === 'fixedDailyMinutes'
-          ? `Workout ${payload.minutesPerDay} min/day • Ends ${payload.endDate}`
-          : `Complete ${payload.totalMinutes} minutes by ${payload.targetEndDate} • ~${payload.minutesPerDay} min/day`,
-      type: 'success',
-      timeout: 2600,
-    })
-    navigate('/dashboard')
+        } catch (_) {}
+        showToast({ title: 'Failed to create plan', body: body || 'Bad request', type: 'error', timeout: 3200 })
+        return
+      }
+      showToast({ title: 'Failed to create plan', body: `HTTP ${res.status}`, type: 'error', timeout: 3200 })
+      return
+    } catch (err) {
+      console.error('[SavePlan][Workout] failed', err)
+      showToast({ title: 'Failed to save plan', body: 'Please try again.', type: 'error', timeout: 2600 })
+      return
+    }
   }
 
   return (

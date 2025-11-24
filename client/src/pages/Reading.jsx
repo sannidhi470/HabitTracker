@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/reading.css'
 import { initThemeFromStorage, setTheme as applyTheme, showToast } from '../services/auth.js'
+import { getHabitIdByName, getUserIdByEmail, addHabitToUser, addPlan } from '../services/api.js'
+import { getUserEmail, saveHabitId, saveUserId } from '../services/session.js'
 
 function pad2(n) {
   return String(n).padStart(2, '0')
@@ -196,38 +198,69 @@ export default function Reading() {
   }, [planMode, startDate, pagesPerDay, planLengthValue, planLengthUnit, targetEndDate, totalPages])
 
   // Submit
-  const onSave = (e) => {
+  const onSave = async (e) => {
     e.preventDefault()
     if (!canSave) return
-    const payload =
-      planMode === 'fixedDailyPages'
-        ? {
-            habitType: 'reading',
-            planMode,
-            pagesPerDay: Number(pagesPerDay),
-            planLength: { value: Number(planLengthValue), unit: planLengthUnit },
-            startDate,
-            endDate: derivedEndDate,
+    try {
+      console.debug('[SavePlan][Reading] start')
+      const habitId = await getHabitIdByName('Reading')
+      console.debug('[SavePlan][Reading] habitId', habitId)
+      if (!Number.isFinite(habitId)) throw new Error('Invalid habit id')
+      saveHabitId(habitId)
+      const email = getUserEmail()
+      console.debug('[SavePlan][Reading] email', email)
+      if (!email) {
+        showToast({ title: 'Login required', body: 'Please log in again.', type: 'error', timeout: 2600 })
+        return
+      }
+      const userId = await getUserIdByEmail(email)
+      console.debug('[SavePlan][Reading] userId', userId)
+      if (!Number.isFinite(userId)) throw new Error('Invalid user id')
+      saveUserId(userId)
+      console.debug('[SavePlan][Reading] linking user to habit')
+      await addHabitToUser({ userId, habitId })
+      console.debug('[SavePlan][Reading] user-habit linked, creating plan')
+
+      const planType = planMode === 'fixedDailyPages' ? 'FIXED' : 'DEADLINE'
+      const toZ = (d) => `${d}T00:00:00.000Z`
+      const endDateIso = planMode === 'fixedDailyPages' ? derivedEndDate : targetEndDate
+      const planPayload = {
+        userId,
+        habitId,
+        planType,
+        startDate: toZ(startDate),
+        endDate: toZ(endDateIso),
+        planLength: planMode === 'fixedDailyPages' ? Number(planLengthValue) : Number(totalPages),
+        perDay: planMode === 'fixedDailyPages' ? Number(pagesPerDay) : Number(derivedPagesPerDay),
+        unit: 'pages',
+      }
+      const res = await addPlan(planPayload)
+      if (res.status === 200) {
+        console.debug('[SavePlan][Reading] plan created, redirecting')
+        navigate('/dashboard')
+        return
+      }
+      if (res.status === 400) {
+        let body = ''
+        try {
+          const ct = res.headers.get('content-type') || ''
+          if (ct.includes('application/json')) {
+            const j = await res.json()
+            body = typeof j === 'string' ? j : (j.message || j.error || JSON.stringify(j))
+          } else {
+            body = await res.text()
           }
-        : {
-            habitType: 'reading',
-            planMode,
-            startDate,
-            targetEndDate,
-            totalPages: Number(totalPages),
-            pagesPerDay: derivedPagesPerDay,
-          }
-    showToast({
-      title: 'Reading plan saved',
-      body:
-        planMode === 'fixedDailyPages'
-          ? `Read ${payload.pagesPerDay} pages/day • Ends ${payload.endDate}`
-          : `Finish ${payload.totalPages} pages by ${payload.targetEndDate} • ~${payload.pagesPerDay} pages/day`,
-      type: 'success',
-      timeout: 2600,
-    })
-    // Navigate to dashboard for now (wire to real flow later)
-    navigate('/dashboard')
+        } catch (_) {}
+        showToast({ title: 'Failed to create plan', body: body || 'Bad request', type: 'error', timeout: 3200 })
+        return
+      }
+      showToast({ title: 'Failed to create plan', body: `HTTP ${res.status}`, type: 'error', timeout: 3200 })
+      return
+    } catch (err) {
+      console.error('[SavePlan][Reading] failed', err)
+      showToast({ title: 'Failed to save plan', body: 'Please try again.', type: 'error', timeout: 2600 })
+      return
+    }
   }
 
   return (

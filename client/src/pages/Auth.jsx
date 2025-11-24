@@ -11,6 +11,8 @@ import {
   startOAuth,
   showToast,
 } from '../services/auth.js'
+import { saveUserEmail, saveUserId } from '../services/session.js'
+import { getUserIdByEmail, getUserHabits } from '../services/api.js'
 
 export default function Auth() {
   // Theme
@@ -138,7 +140,23 @@ export default function Auth() {
     try {
       const res = await loginRequest({ email: loginEmail.trim(), password: loginPassword })
       if (res.status === 200) {
-        navigate('/selection')
+        const email = loginEmail.trim()
+        saveUserEmail(email)
+        // Fetch user id and habits to decide redirection
+        try {
+          const userId = await getUserIdByEmail(email)
+          if (Number.isFinite(userId) && userId > 0) {
+            saveUserId(userId)
+            const habits = await getUserHabits(userId)
+            const hasAny = Array.isArray(habits) && habits.length > 0
+            navigate(hasAny ? '/dashboard' : '/selection')
+          } else {
+            navigate('/selection')
+          }
+        } catch (innerErr) {
+          console.error('Post-login routing failed', innerErr)
+          navigate('/selection')
+        }
       } else if (res.status === 400) {
         setLoginMsg('Incorrect email or password')
       } else {
@@ -165,6 +183,7 @@ export default function Auth() {
       })
       if (res.status === 200 || res.status === 201) {
         setSignupMsg('User registered successfully')
+        saveUserEmail(signupEmail.trim())
         navigate('/selection')
       } else if (res.status === 400) {
         setSignupMsg('Please log in')
