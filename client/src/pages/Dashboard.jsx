@@ -59,13 +59,24 @@ export default function Dashboard() {
               return ''
             }
             const toId = (item) => {
-              if (typeof item === 'number') return item
-              const candidates = [
-                item?.habitId, item?.id, item?.habitID, item?.HabitId, item?.HabitID,
+              if (typeof item === 'number') return Number(item)
+              if (!item || typeof item !== 'object') return NaN
+              // Prefer explicit habitId-like fields; DO NOT use bare 'id' which may be a userHabit id
+              const directCandidates = [
+                item?.habitId, item?.habit_id, item?.HabitId, item?.HabitID,
               ]
-              for (const c of candidates) {
+              for (const c of directCandidates) {
                 const n = Number(c)
                 if (Number.isFinite(n) && n > 0) return n
+              }
+              // Sometimes the habit object is nested
+              const nested = item?.habit || item?.Habit || null
+              if (nested && typeof nested === 'object') {
+                const nestedCandidates = [nested?.habitId, nested?.habit_id, nested?.id, nested?.HabitId, nested?.HabitID]
+                for (const c of nestedCandidates) {
+                  const n = Number(c)
+                  if (Number.isFinite(n) && n > 0) return n
+                }
               }
               return NaN
             }
@@ -201,9 +212,23 @@ export default function Dashboard() {
   const onLog = async (key, label) => {
     try {
       const uid = currentUserId
-      const hid = habitIdsByKey[key]
-      if (!Number.isFinite(uid) || uid <= 0 || !Number.isFinite(hid) || hid <= 0) {
-        showToast({ title: 'Unable to log', body: 'Missing user or habit id.', type: 'error', timeout: 2400 })
+      let hid = habitIdsByKey[key]
+      if (!Number.isFinite(uid) || uid <= 0) {
+        showToast({ title: 'Unable to log', body: 'Missing user id.', type: 'error', timeout: 2400 })
+        return
+      }
+      // Resolve habit id if missing
+      if (!Number.isFinite(hid) || hid <= 0) {
+        try {
+          const resolved = await getHabitIdByName(label)
+          if (Number.isFinite(resolved) && resolved > 0) {
+            hid = resolved
+            setHabitIdsByKey((prev) => ({ ...prev, [key]: resolved }))
+          }
+        } catch (_) {}
+      }
+      if (!Number.isFinite(hid) || hid <= 0) {
+        showToast({ title: 'Unable to log', body: 'Missing habit id.', type: 'error', timeout: 2400 })
         return
       }
       let amount = Number(logValuesByKey[key])
@@ -211,17 +236,50 @@ export default function Dashboard() {
         const fallback = Number((plansByKey[key] && plansByKey[key].perDay) || 0)
         amount = fallback > 0 ? fallback : 1
       }
+      // Determine current today's total (from latest if same day)
+      const latest = latestByKey[key]
+      let prevToday = 0
+      if (latest && latest.timestamp) {
+        const d = new Date(latest.timestamp)
+        const isSame = todayIso() === [
+          d.getFullYear(),
+          String(d.getMonth() + 1).padStart(2, '0'),
+          String(d.getDate()).padStart(2, '0'),
+        ].join('-')
+        if (isSame) prevToday = Number(latest.logValue) || 0
+      }
       setLogBusyKey(key)
-      await addProgress({
-        userId: uid,
-        habitId: hid,
-        logValue: String(amount),
-      })
+      try {
+        await addProgress({
+          userId: uid,
+          habitId: hid,
+          logValue: Number(amount),
+        })
+      } catch (err1) {
+        // Fallback: re-resolve habit id by name and retry once
+        try {
+          const resolved = await getHabitIdByName(label)
+          if (Number.isFinite(resolved) && resolved > 0 && resolved !== hid) {
+            setHabitIdsByKey((prev) => ({ ...prev, [key]: resolved }))
+            hid = resolved
+            await addProgress({
+              userId: uid,
+              habitId: hid,
+              logValue: Number(amount),
+            })
+          } else {
+            throw err1
+          }
+        } catch (err2) {
+          throw err2
+        }
+      }
       await refreshLatest()
       const perDay = Number(plansByKey[key]?.perDay) || 0
       const unit = String(plansByKey[key]?.habitUnit || plansByKey[key]?.unit || 'units')
-      if (perDay > 0 && amount >= perDay) {
-        const msg = amount > perDay
+      const predictedToday = prevToday + amount
+      if (perDay > 0 && predictedToday >= perDay) {
+        const msg = predictedToday > perDay
           ? 'Congratulations, you have exceeded your daily target!'
           : 'Congratulations, you have met your daily target!'
         celebrateWithConfetti(msg)
@@ -269,24 +327,24 @@ export default function Dashboard() {
   }
   const todayMetaText = (key) => {
     const unit = String(plansByKey[key]?.habitUnit || plansByKey[key]?.unit || '').toLowerCase() || 'units'
-    const latest = latestByKey[key]
     const perDay = Number(plansByKey[key]?.perDay) || 0
+    const latest = latestByKey[key]
+    let todayTotal = 0
     if (latest && latest.timestamp) {
-      const latestDate = new Date(latest.timestamp)
+      const d = new Date(latest.timestamp)
       const sameDay = todayIso() === [
-        latestDate.getFullYear(),
-        String(latestDate.getMonth() + 1).padStart(2, '0'),
-        String(latestDate.getDate()).padStart(2, '0'),
+        d.getFullYear(),
+        String(d.getMonth() + 1).padStart(2, '0'),
+        String(d.getDate()).padStart(2, '0'),
       ].join('-')
-      const value = Number(latest.logValue) || 0
-      if (sameDay && perDay > 0) {
-        const pct = Math.min(100, Math.round((value / perDay) * 100))
-        return `Today: ${value}/${perDay} ${unit} (${pct}%)`
-      }
-      if (sameDay) return `Today: ${value} ${unit}`
-      return `Last: ${value} ${unit} · ${formatDate(latest.timestamp)}`
+      if (sameDay) todayTotal = Number(latest.logValue) || 0
     }
-    if (perDay > 0) return `No data yet — target ${perDay} ${unit}/day`
+    if (perDay > 0) {
+      const pct = Math.min(100, Math.round(((todayTotal || 0) / perDay) * 100))
+      return `Today: ${todayTotal}/${perDay} ${unit} (${pct}%)`
+    }
+    // No plan perDay; show today's raw total or fallback
+    if (todayTotal > 0) return `Today: ${todayTotal} ${unit}`
     return 'No data yet — set up a plan to begin'
   }
   const progressPercent = (key) => {
@@ -395,6 +453,9 @@ export default function Dashboard() {
             </button>
             <button className="btn" type="button" onClick={() => navigate('/selection')}>
               Manage habits
+            </button>
+            <button className="btn" type="button" onClick={() => navigate('/progress')}>
+              View progress
             </button>
           </div>
         </section>

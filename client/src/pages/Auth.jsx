@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import '../styles/auth.css'
 import { useNavigate } from 'react-router-dom'
+import { GoogleLogin } from '@react-oauth/google'
 import {
   initThemeFromStorage,
   setTheme as applyTheme,
@@ -10,9 +11,10 @@ import {
   signupRequest,
   startOAuth,
   showToast,
+  googleAuthWithIdToken,
 } from '../services/auth.js'
 import { saveUserEmail, saveUserId } from '../services/session.js'
-import { getUserIdByEmail, getUserHabits } from '../services/api.js'
+import { getUserHabits } from '../services/api.js'
 
 export default function Auth() {
   // Theme
@@ -264,10 +266,85 @@ export default function Auth() {
           </div>
 
           <div className="providers" aria-label="Social sign-in">
-            <button className="btn provider" type="button" data-provider="google" onClick={() => startOAuth('google')}>
-              <img src="/assets/icons/google.svg" alt="" className="provider-icon" />
-              <span>Continue with Google</span>
-            </button>
+            <div className="btn provider" role="button" aria-label="Continue with Google" style={{ padding: 0, background: 'transparent' }}>
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  try {
+                    const idToken = credentialResponse && credentialResponse.credential
+                    console.debug('[GoogleLogin] credentialResponse', {
+                      hasCredential: !!(credentialResponse && credentialResponse.credential),
+                    })
+                    if (!idToken) {
+                      showToast({ title: 'Google sign-in failed', body: 'No token received.' })
+                      return
+                    }
+                    // Send token to backend for verification
+                    const res = await googleAuthWithIdToken(idToken)
+                    if (!res) {
+                      showToast({ title: 'Google sign-in failed', body: 'No response from server.' })
+                      return
+                    }
+                    if (!res.ok) {
+                      let errBody = ''
+                      try {
+                        const ct = res.headers.get('content-type') || ''
+                        if (ct.includes('application/json')) {
+                          const j = await res.json()
+                          errBody = (j && (j.error || j.message)) || JSON.stringify(j)
+                        } else {
+                          errBody = await res.text()
+                        }
+                      } catch (_) {}
+                      console.error('[GoogleLogin] backend error', res.status, errBody)
+                      showToast({
+                        title: 'Google sign-in failed',
+                        body: errBody ? `Server error: ${String(errBody)}` : `HTTP ${res.status}`,
+                      })
+                      return
+                    }
+                    let serverData = null
+                    try { serverData = await res.json() } catch (_) {
+                      showToast({ title: 'Google sign-in failed', body: 'Invalid server response.' })
+                      return
+                    }
+                    const email =
+                      (serverData && (serverData.email || (serverData.user && serverData.user.email))) || ''
+                    if (!email || typeof email !== 'string') {
+                      showToast({ title: 'Google sign-in failed', body: 'Server did not return an email.' })
+                      return
+                    }
+                    const backendUserId =
+                      (serverData && (serverData.userId ?? serverData.id ?? (serverData.user && serverData.user.id))) || null
+                    saveUserEmail(email)
+                    try {
+                      const userId = Number(backendUserId)
+                      if (!Number.isFinite(userId) || userId <= 0) {
+                        showToast({ title: 'Google sign-in failed', body: 'Server did not return a valid userId.' })
+                        return
+                      }
+                      if (Number.isFinite(userId) && userId > 0) {
+                        saveUserId(userId)
+                        const habits = await getUserHabits(userId)
+                        const hasAny = Array.isArray(habits) && habits.length > 0
+                        navigate(hasAny ? '/dashboard' : '/selection')
+                      } else {
+                        navigate('/selection')
+                      }
+                    } catch (innerErr) {
+                      console.error('Post-Google routing failed', innerErr)
+                      navigate('/selection')
+                    }
+                  } catch (err) {
+                    console.error('[GoogleLogin] error', err)
+                    showToast({ title: 'Google sign-in failed', body: String(err && err.message ? err.message : err) })
+                  }
+                }}
+                onError={() => {
+                  showToast({ title: 'Google sign-in failed', body: 'Popup closed or blocked.' })
+                }}
+                useOneTap={false}
+              />
+            </div>
             <button className="btn provider" type="button" data-provider="microsoft" onClick={() => startOAuth('microsoft')}>
               <img src="/assets/icons/microsoft.svg" alt="" className="provider-icon" />
               <span>Continue with Microsoft</span>

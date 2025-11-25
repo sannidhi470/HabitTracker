@@ -103,4 +103,13 @@ export async function startOAuth(provider) {
   // location.href = `/auth/${provider}`
 }
 
+// Google sign-in: send ID token to backend for verification
+export async function googleAuthWithIdToken(idToken) {
+  return fetch('http://localhost:8081/api/user/google', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  })
+}
+
 

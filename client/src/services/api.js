@@ -194,4 +194,17 @@ export async function getLatestProgress({ userId, habitId }) {
   return data
 }
 
+export async function getProgressRecords({ userId, habitId }) {
+  console.debug('[API] getProgressRecords start', { userId, habitId })
+  const res = await fetchWithFallback('/api/progress/getRecords', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, habitId }),
+  })
+  const data = await parseJsonResponse(res)
+  const list = Array.isArray(data) ? data : []
+  console.debug('[API] getProgressRecords success', { count: list.length })
+  return list
+}
+
 
