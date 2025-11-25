@@ -8,8 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -17,6 +20,46 @@ public class userController {
     @Autowired
     private userService userService;
 
+    @PostMapping("/google")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) {
+        String idToken = body.get("idToken");
+
+        try {
+            // Call Google's token info endpoint
+            RestTemplate restTemplate = new RestTemplate();
+            String url = "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken;
+            Map<String, String> googleResponse = restTemplate.getForObject(url, Map.class);
+
+            // Validate audience
+            String clientId = "1069499229387-s8p28ijht9559oc1oo465ot36rrgmrr6.apps.googleusercontent.com";
+            if (!clientId.equals(googleResponse.get("aud"))) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Invalid ID token audience"));
+            }
+
+            String email = googleResponse.get("email");
+            String name = googleResponse.get("name");
+
+            // Check if user exists
+            User user = userService.getUserByEmail(email);
+            if (user == null) {
+                user = new User();
+                user.setEmail(email);
+                user.setFullName(name);
+                userService.saveUser(user);
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("email", user.getEmail());
+            response.put("userId", user.getId());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
     @PostMapping("/signup")
     public ResponseEntity<Void> signup(@RequestBody User user){
         try{

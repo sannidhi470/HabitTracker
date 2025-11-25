@@ -35,6 +35,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/plan/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/progress/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/progress/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/user/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
@@ -47,6 +48,8 @@ public class SecurityConfig {
         config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173", "http://127.0.0.1:5173",
                 "http://localhost:5175", "http://127.0.0.1:5175",
+                "http://localhost:5176", "http://127.0.0.1:5176",
+                "http://localhost:5174", "http://127.0.0.1:5174",
                 "http://localhost:8080", "http://127.0.0.1:8080"
         ));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

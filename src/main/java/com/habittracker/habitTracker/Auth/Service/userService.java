@@ -27,6 +27,10 @@ public class userService {
         return userrepo.save(user);
     }
 
+    public void saveUser(User user) {
+        userrepo.save(user);
+    }
+
     public User login(String email, String password){
 
         Optional<User> user = userrepo.findByEmail(email);
@@ -44,6 +48,14 @@ public class userService {
         Optional<User> user = userrepo.findById(id);
         if(user.isEmpty()){
             throw new RuntimeException("User not found");
+        }
+        return user.get();
+    }
+
+    public User getUserByEmail(String email){
+        Optional<User> user = userrepo.findByEmail(email);
+        if(user.isEmpty()){
+            return null;
         }
         return user.get();
     }

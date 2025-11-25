@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RestController
 @RequestMapping("api/progress")
 public class planProgressController {
@@ -17,23 +20,36 @@ public class planProgressController {
 
 
     @PostMapping("/addProgress")
-    public ResponseEntity<?> addProgress(@RequestBody addProgressBody progressBody){
+    public ResponseEntity<?> addProgress(@RequestBody addProgressBody progressBody) {
         try {
-            planProgressService.addProgress(progressBody.getUserId(),progressBody.getHabitId(),progressBody.getLogValue());
+            planProgressService.addProgress(progressBody.getUserId(), progressBody.getHabitId(), progressBody.getLogValue());
             return ResponseEntity.ok().build();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
 
     }
 
     @PostMapping("/latest")
-    public ResponseEntity<?> getLatestProgress(@RequestBody latestBody latestBody){
-        planProgress latest = planProgressService.GetLatestProgress(latestBody.getUserId(),latestBody.getHabitId());
-        if(latest == null){
+    public ResponseEntity<?> getLatestProgress(@RequestBody latestBody latestBody) {
+        planProgress latest = planProgressService.GetLatestProgress(latestBody.getUserId(), latestBody.getHabitId());
+        if (latest == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok().body(latest);
     }
+
+    @PostMapping("/getRecords")
+    public ResponseEntity<?> getProgress(@RequestBody latestBody latestBody) {
+        List<planProgress> records = new ArrayList<planProgress>();
+        try {
+            records = planProgressService.getProgress(latestBody.getUserId(), latestBody.getHabitId());
+            return ResponseEntity.ok().body(records);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+
+        }
+    }
+
+
 }
