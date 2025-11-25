@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import '../styles/meditation.css'
 import { initThemeFromStorage, setTheme as applyTheme, showToast } from '../services/auth.js'
 import { getHabitIdByName, getUserIdByEmail, addHabitToUser, addPlan } from '../services/api.js'
-import { getUserEmail, saveHabitId, saveUserId } from '../services/session.js'
+import { getUserEmail, saveHabitId, saveUserId, clearSession } from '../services/session.js'
 
 function pad2(n) {
   return String(n).padStart(2, '0')
@@ -140,6 +140,10 @@ export default function Meditation() {
     applyTheme(next)
     setTheme(next)
   }
+  const onLogout = () => {
+    clearSession()
+    navigate('/auth', { replace: true })
+  }
 
   // Form state
   const todayIso = new Date().toISOString().slice(0, 10)
@@ -269,19 +273,22 @@ export default function Meditation() {
         <div className="meditation-brand">
           <span className="meditation-brand-text">Habit Tracker</span>
         </div>
-        <button
-          id="theme-toggle"
-          className="icon-btn meditation-theme-toggle"
-          type="button"
-          aria-pressed={String(theme === 'dark')}
-          aria-label="Toggle dark mode"
-          title="Toggle theme"
-          onClick={onToggleTheme}
-        >
-          <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
-          </svg>
-        </button>
+        <div style={{ display: 'grid', gridAutoFlow: 'column', gap: 8, justifySelf: 'end' }}>
+          <button
+            id="theme-toggle"
+            className="icon-btn meditation-theme-toggle"
+            type="button"
+            aria-pressed={String(theme === 'dark')}
+            aria-label="Toggle dark mode"
+            title="Toggle theme"
+            onClick={onToggleTheme}
+          >
+            <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
+            </svg>
+          </button>
+          <button className="btn" type="button" onClick={onLogout}>Logout</button>
+        </div>
       </header>
 
       <main className="meditation-main">

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/journaling.css'
 import { initThemeFromStorage, setTheme as applyTheme, showToast } from '../services/auth.js'
+import { clearSession } from '../services/session.js'
 
 function pad2(n) {
   return String(n).padStart(2, '0')
@@ -138,6 +139,10 @@ export default function Journaling() {
     applyTheme(next)
     setTheme(next)
   }
+  const onLogout = () => {
+    clearSession()
+    navigate('/auth', { replace: true })
+  }
 
   // Form state
   const todayIso = new Date().toISOString().slice(0, 10)
@@ -236,19 +241,22 @@ export default function Journaling() {
         <div className="journaling-brand">
           <span className="journaling-brand-text">Habit Tracker</span>
         </div>
-        <button
-          id="theme-toggle"
-          className="icon-btn journaling-theme-toggle"
-          type="button"
-          aria-pressed={String(theme === 'dark')}
-          aria-label="Toggle dark mode"
-          title="Toggle theme"
-          onClick={onToggleTheme}
-        >
-          <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
-          </svg>
-        </button>
+        <div style={{ display: 'grid', gridAutoFlow: 'column', gap: 8, justifySelf: 'end' }}>
+          <button
+            id="theme-toggle"
+            className="icon-btn journaling-theme-toggle"
+            type="button"
+            aria-pressed={String(theme === 'dark')}
+            aria-label="Toggle dark mode"
+            title="Toggle theme"
+            onClick={onToggleTheme}
+          >
+            <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
+            </svg>
+          </button>
+          <button className="btn" type="button" onClick={onLogout}>Logout</button>
+        </div>
       </header>
 
       <main className="journaling-main">

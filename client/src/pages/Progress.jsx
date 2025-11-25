@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import '../styles/dashboard.css'
 import { initThemeFromStorage, setTheme as applyTheme, showToast } from '../services/auth.js'
 import { getUserEmail, getUserId, saveUserId } from '../services/session.js'
+import { clearSession } from '../services/session.js'
 import { getUserIdByEmail, getUserHabits, getPlan, getHabitIdByName, getProgressRecords } from '../services/api.js'
 import ProgressChart from '../components/ProgressChart.jsx'
 
@@ -29,6 +30,10 @@ export default function Progress() {
     const next = current === 'dark' ? 'light' : 'dark'
     applyTheme(next)
     setTheme(next)
+  }
+  const onLogout = () => {
+    clearSession()
+    navigate('/auth', { replace: true })
   }
 
   useEffect(() => {
@@ -269,19 +274,22 @@ export default function Progress() {
         <div className="dashboard-brand">
           <span className="dashboard-brand-text">Habit Tracker</span>
         </div>
-        <button
-          id="theme-toggle"
-          className="icon-btn dashboard-theme-toggle"
-          type="button"
-          aria-pressed={String(theme === 'dark')}
-          aria-label="Toggle dark mode"
-          title="Toggle theme"
-          onClick={onToggleTheme}
-        >
-          <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
-          </svg>
-        </button>
+        <div style={{ display: 'grid', gridAutoFlow: 'column', gap: 8, justifySelf: 'end' }}>
+          <button
+            id="theme-toggle"
+            className="icon-btn dashboard-theme-toggle"
+            type="button"
+            aria-pressed={String(theme === 'dark')}
+            aria-label="Toggle dark mode"
+            title="Toggle theme"
+            onClick={onToggleTheme}
+          >
+            <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
+            </svg>
+          </button>
+          <button className="btn" type="button" onClick={onLogout}>Logout</button>
+        </div>
       </header>
 
       <main className="dashboard-main">

@@ -47,5 +47,12 @@ export function getHabitKey() {
   try { return localStorage.getItem(KEYS.habitKey) || '' } catch (_) { return '' }
 }
 
+export function clearSession() {
+  try { localStorage.removeItem(KEYS.userEmail) } catch (_) {}
+  try { localStorage.removeItem(KEYS.userId) } catch (_) {}
+  try { localStorage.removeItem(KEYS.habitId) } catch (_) {}
+  try { localStorage.removeItem(KEYS.habitKey) } catch (_) {}
+}
+
 
 

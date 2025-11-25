@@ -2,6 +2,7 @@ import '../styles/selection.css'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { initThemeFromStorage, setTheme as applyTheme } from '../services/auth.js'
+import { clearSession } from '../services/session.js'
 import readingImg from '../assets/backgrounds/Reading.jpg'
 import meditationImg from '../assets/backgrounds/mediatation 2.jpg'
 import workoutImg from '../assets/backgrounds/workout.jpg'
@@ -20,6 +21,10 @@ export default function Selection() {
     const next = current === 'dark' ? 'light' : 'dark'
     applyTheme(next)
     setTheme(next)
+  }
+  const onLogout = () => {
+    clearSession()
+    navigate('/auth', { replace: true })
   }
 
   const onSelect = useCallback((key) => {
@@ -43,19 +48,22 @@ export default function Selection() {
         <div className="selection-brand">
           <span className="selection-brand-text">Habit Tracker</span>
         </div>
-        <button
-          id="theme-toggle"
-          className="icon-btn selection-theme-toggle"
-          type="button"
-          aria-pressed={String(theme === 'dark')}
-          aria-label="Toggle dark mode"
-          title="Toggle theme"
-          onClick={onToggleTheme}
-        >
-          <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
-          </svg>
-        </button>
+        <div style={{ gridColumn: 3, justifySelf: 'end', display: 'grid', gridAutoFlow: 'column', gap: 8 }}>
+          <button
+            id="theme-toggle"
+            className="icon-btn selection-theme-toggle"
+            type="button"
+            aria-pressed={String(theme === 'dark')}
+            aria-label="Toggle dark mode"
+            title="Toggle theme"
+            onClick={onToggleTheme}
+          >
+            <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
+            </svg>
+          </button>
+          <button className="btn" type="button" onClick={onLogout}>Logout</button>
+        </div>
       </header>
 
       <main className="selection-main">
