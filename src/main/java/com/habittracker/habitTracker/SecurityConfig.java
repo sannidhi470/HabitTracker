@@ -1,10 +1,14 @@
 package com.habittracker.habitTracker;
 
+import com.habittracker.habitTracker.Auth.Service.RememberMeFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -14,11 +18,25 @@ import java.util.Arrays;
 @Configuration
 public class SecurityConfig {
 
+    @Autowired
+    private RememberMeFilter rememberMeFilter;
+
+//    @Bean
+//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//
+//        http
+//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+//                .csrf(csrf -> csrf.disable())
+//                .addFilterBefore(rememberMeFilter, UsernamePasswordAuthenticationFilter.class);
+//
+//        return http.build();
+//    }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
+                .addFilterBefore(rememberMeFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ✅ allow preflight
                         .requestMatchers("/api/signup", "/api/login").permitAll()
@@ -29,12 +47,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/habit/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/userhabit/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/userhabit/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/userhabit/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/user/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/user/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/plan/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/plan/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/plan/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/progress/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/progress/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/progress/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/user/**").permitAll()
                         .anyRequest().authenticated()
                 );

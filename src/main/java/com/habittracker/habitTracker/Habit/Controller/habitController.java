@@ -18,15 +18,10 @@ public class habitController {
 
     @PostMapping("/addHabit")
     public ResponseEntity<Void> addHabit(@RequestBody Habit habit){
-        try
-        {
+
             habitService.addHabit(habit);
             return ResponseEntity.status(HttpStatus.OK).build();
-        }
-        catch (RuntimeException e)
-        {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+
 
     }
 
@@ -35,6 +30,7 @@ public class habitController {
         return habitService.getAllHabits();
     }
 
+    //To better this make getHabit info first check what is needed and return the same
     @GetMapping("/getHabitId")
     public ResponseEntity<Long> getHabitById(@RequestParam String name){
         try {

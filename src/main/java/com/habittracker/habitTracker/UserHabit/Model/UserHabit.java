@@ -19,10 +19,14 @@ public class UserHabit {
     @JoinColumn(name="habit_id", nullable=false)
     private Habit habit;
 
+    @Column(nullable = true)
+    private String description;
+
     public UserHabit() {}
-    public UserHabit(User user, Habit habit) {
+    public UserHabit(User user, Habit habit, String description) {
         this.user = user;
         this.habit = habit;
+        this.description = description;
     }
     public long getId() {
         return id;
@@ -41,5 +45,11 @@ public class UserHabit {
     }
     public void setHabit(Habit habit) {
         this.habit = habit;
+    }
+    public String getDescription() {
+        return description;
+    }
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

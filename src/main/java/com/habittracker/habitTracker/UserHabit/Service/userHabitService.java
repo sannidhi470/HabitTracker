@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class userHabitService {
@@ -29,7 +30,7 @@ public class userHabitService {
         Habit habit = habitService.getHabitById(habit_id);
         boolean not_exists= userHabitRepo.findByUserIdAndHabitHabitId(user_id, habit_id).isEmpty();
         if(not_exists) {
-            UserHabit userHabit = new UserHabit(user, habit);
+            UserHabit userHabit = new UserHabit(user, habit,"");
             userHabitRepo.save(userHabit);
             return userHabit;
         }
@@ -39,7 +40,7 @@ public class userHabitService {
     }
 
     public List<String> getHabitForUserId(Long user_id)
-    {
+    {  // use habitId in the function getHabitIdsForUsers to get names
         List<UserHabit> userHabits = userHabitRepo.findByUserId(user_id);
         if(userHabits.isEmpty())
         {
@@ -54,7 +55,17 @@ public class userHabitService {
         }
         return habitnames;
     }
-
+    public void deleteUserHabit(Long user_id, Long habit_id)
+    {
+        Optional<UserHabit> userhabit = userHabitRepo.findByUserIdAndHabitHabitId(user_id, habit_id);
+        if(userhabit.isPresent())
+        {
+            userHabitRepo.delete(userhabit.get());
+        }
+        else {
+            return;
+        }
+    }
     public List<Long> getHabitIdsForUserId(Long user_id)
     {
         List<UserHabit> userHabits = userHabitRepo.findByUserId(user_id);
@@ -64,7 +75,7 @@ public class userHabitService {
         }
         List<Long> habitIds = new ArrayList<>();
         for(UserHabit userHabit : userHabits)
-        {
+        {   //Habit object is not neede as you can use the Habit DB directly
             Habit habit = userHabit.getHabit();
             Long habitId = habit.getHabit_id();
             habitIds.add(habitId);

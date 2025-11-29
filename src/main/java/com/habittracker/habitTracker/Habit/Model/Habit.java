@@ -8,7 +8,7 @@ public class Habit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long habitId;
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String key;
     @Column(nullable = false)
     private String unit;

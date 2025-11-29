@@ -5,6 +5,7 @@ import com.habittracker.habitTracker.Habit.Model.Habit;
 import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Entity
@@ -22,18 +23,18 @@ public class planProgress {
     @JoinColumn(name="habit_id", nullable=false)
     private Habit habit;
 
-    @CreationTimestamp
     @Column(nullable=false)
-    private Date timestamp;
+    private LocalDate timestamp;
 
     @Column(nullable=false)
     private int logValue;
 
     public planProgress() {}
-    public planProgress(User user, Habit habit, int logValue) {
+    public planProgress(User user, Habit habit, int logValue, LocalDate timestamp) {
         this.user = user;
         this.habit = habit;
         this.logValue = logValue;
+        this.timestamp = timestamp;
     }
 
     public int getId() {
@@ -54,17 +55,16 @@ public class planProgress {
     public void setHabit(Habit habit) {
         this.habit = habit;
     }
-    public Date getTimestamp() {
-        return timestamp;
-    }
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
-    }
     public int getLogValue() {
         return logValue;
     }
     public void setLogValue(int logValue) {
         this.logValue = logValue;
     }
-
+    public LocalDate getDate() {
+        return timestamp;
+    }
+    public void setDate(LocalDate date) {
+        this.timestamp = date;
+    }
 }

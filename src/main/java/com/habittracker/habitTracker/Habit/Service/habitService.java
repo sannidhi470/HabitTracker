@@ -15,9 +15,21 @@ public class habitService {
     private habitRepo habitRepo;
 
     public void  addHabit(Habit habit){
+
+        String normalizedKey = habit.getKey().toLowerCase();
+
+        Optional<Habit> existing = habitRepo.findByKey(normalizedKey);
+
+        if (existing.isPresent()) {
+            return;
+        }
+
+        habit.setKey(normalizedKey);
         habitRepo.save(habit);
+
     }
     public List<Habit> getAllHabits(){
+        //this can be  sorted and pageable - next phase
         return habitRepo.findAll();
 
     }
@@ -40,7 +52,7 @@ public class habitService {
 
     public Long getHabitId(String name)
     {
-            Optional<Habit> habit = habitRepo.findByKey(name);
+            Optional<Habit> habit = habitRepo.findByKey(name.toLowerCase());
             if(habit.isPresent())
             {
                 return habit.get().getHabit_id();

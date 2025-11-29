@@ -11,6 +11,9 @@ import com.habittracker.habitTracker.UserPlan.Repository.userPlanRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class userPlanService {
 
@@ -39,18 +42,18 @@ public class userPlanService {
 
     }
 
-    public userPlan.PlanType getPlanType(Long userId)
-    {
-
-       if(userPlanRepo.findByUserId(userId).isPresent())
-       {
-           return userPlanRepo.findByUserId(userId).get().getPlanType();
-       }
-       else
-       {
-           throw new RuntimeException("User not found");
-       }
-    }
+//    public userPlan.PlanType getPlanType(Long userId)
+//    {
+//
+//       if(userPlanRepo.findByUserId(userId).isPresent())
+//       {
+//           return userPlanRepo.findByUserId(userId).get().getPlanType();
+//       }
+//       else
+//       {
+//           throw new RuntimeException("User not found");
+//       }
+//    }
 
     public userPlan getUserPlan(Long userId, Long habitId)
     {
@@ -61,6 +64,36 @@ public class userPlanService {
         else
         {
             throw new RuntimeException("User not found");
+        }
+    }
+
+    public void deleteUserPlan(Long userId, Long habitId)
+    {
+        Optional<userPlan> userplan = userPlanRepo.findByUserIdAndHabitHabitId(userId,habitId);
+        if(userplan.isPresent())
+        {
+            userPlanRepo.delete(userplan.get());
+        }
+        else
+        {
+            return;
+        }
+    }
+
+    public List<userPlan> getUserPlans(Long userId)
+    {
+        if(userService.getUserById(userId)==null)
+        {
+            throw new RuntimeException("User not found");
+        }
+        List<userPlan> userPlans = userPlanRepo.findByUserId(userId);
+        if(userPlans.isEmpty())
+        {
+            return null;
+        }
+        else
+        {
+            return userPlans;
         }
     }
 }

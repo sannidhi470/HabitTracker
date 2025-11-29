@@ -11,11 +11,11 @@ import com.habittracker.habitTracker.UserPlan.DTO.getPlanResponse;
 import com.habittracker.habitTracker.UserPlan.Model.userPlan;
 import com.habittracker.habitTracker.UserPlan.Service.userPlanService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/plan")
@@ -71,6 +71,27 @@ public class userPlanController {
                     .badRequest()
                     .body("Error: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/getPlansByUserId")
+        public ResponseEntity<?> getPlansByUserId(@RequestParam Long userId)
+        {
+            try {
+                List<userPlan> plans = userPlanService.getUserPlans(userId);
+                return ResponseEntity.ok().body(plans);
+            }
+            catch(Exception e){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: " + e.getMessage());
+            }
+
+        }
+    @DeleteMapping("/deletePlan")
+    public ResponseEntity<?> deleteUserPlan(@RequestBody getPlanBody getPlanBody)
+    {
+
+            userPlanService.deleteUserPlan(getPlanBody.getUserId(), getPlanBody.getHabitId());
+            return ResponseEntity.ok().body("Successfully deleted plan");
+
     }
 
 

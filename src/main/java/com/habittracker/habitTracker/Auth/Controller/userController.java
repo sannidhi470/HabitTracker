@@ -3,22 +3,30 @@ package com.habittracker.habitTracker.Auth.Controller;
 import com.habittracker.habitTracker.Auth.DTO.GetIdRequest;
 import com.habittracker.habitTracker.Auth.DTO.LoginRequest;
 import com.habittracker.habitTracker.Auth.Model.User;
+import com.habittracker.habitTracker.Auth.Service.remebberMeService;
 import com.habittracker.habitTracker.Auth.Service.userService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/user")
 public class userController {
     @Autowired
     private userService userService;
+
+    @Autowired
+    private remebberMeService remebberMeService;
 
     @PostMapping("/google")
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) {
@@ -72,9 +80,23 @@ public class userController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@RequestBody LoginRequest loginRequest){
+    public ResponseEntity<Void> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
         try{
-            userService.login(loginRequest.getEmail(), loginRequest.getPassword());
+            User user=userService.login(loginRequest.getEmail(), loginRequest.getPassword());
+            if(loginRequest.isRememberMe())
+            {
+                String token= UUID.randomUUID().toString();
+                String tokenHash = HashUtil.sha256Hex(token);
+                remebberMeService.saveToken(user.getId(), tokenHash);
+                ResponseCookie cookie = ResponseCookie.from("remember_me", token)
+                        .httpOnly(true)
+                        .secure(true)
+                        .path("/")
+                        .maxAge(60 * 60 * 24 * 30)   // 30 days
+                        .sameSite("Lax")
+                        .build();
+                response.addHeader("Set-Cookie", cookie.toString());
+            }
             return ResponseEntity.status(HttpStatus.OK).build();
         }
         catch(RuntimeException e){
