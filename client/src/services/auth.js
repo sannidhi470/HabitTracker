@@ -86,8 +86,23 @@ export async function postWithFallback(path, payload) {
   throw lastErr
 }
 
-export async function loginRequest({ email, password }) {
-  return postWithFallback('/api/user/login', { email, password })
+export async function loginRequest({ email, password, rememberMe }) {
+  const urls = ['http://localhost:8081/api/user/login', 'http://127.0.0.1:8081/api/user/login']
+  let lastErr
+  for (const u of urls) {
+    try {
+      const res = await fetch(u, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, rememberMe: !!rememberMe }),
+      })
+      return res
+    } catch (err) {
+      lastErr = err
+    }
+  }
+  throw lastErr
 }
 
 export async function signupRequest({ fullName, email, password }) {

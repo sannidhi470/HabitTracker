@@ -14,7 +14,7 @@ import {
   googleAuthWithIdToken,
 } from '../services/auth.js'
 import { saveUserEmail, saveUserId } from '../services/session.js'
-import { getUserHabits } from '../services/api.js'
+import { getUserIdByEmail, getUserHabits } from '../services/api.js'
 
 export default function Auth() {
   // Theme
@@ -140,7 +140,7 @@ export default function Auth() {
     setLoginLoading(true)
     setLoginMsg('')
     try {
-      const res = await loginRequest({ email: loginEmail.trim(), password: loginPassword })
+      const res = await loginRequest({ email: loginEmail.trim(), password: loginPassword, rememberMe: loginRemember })
       if (res.status === 200) {
         const email = loginEmail.trim()
         saveUserEmail(email)

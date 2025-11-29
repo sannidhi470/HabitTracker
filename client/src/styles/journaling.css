@@ -28,7 +28,7 @@
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(to bottom right, rgba(255,255,255,0.70), rgba(255,255,255,0.70)),
+    linear-gradient(to bottom right, rgba(255,255,255,0.62), rgba(255,255,255,0.62)),
     var(--bg-image) center/cover no-repeat,
     #f6f3ef;
 }
@@ -359,6 +359,21 @@
     linear-gradient(to bottom right, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
     var(--bg-image) center/cover no-repeat,
     #0b1220;
+}
+
+/* Manual LIGHT override to beat system dark preference */
+[data-theme="light"] .journaling-page {
+  --text: #1f2937;
+  --muted: #475569;
+  --card: #fbf7f2;
+  --border: rgba(0, 0, 0, 0.12);
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+}
+[data-theme="light"] .journaling-page::before {
+  background:
+    linear-gradient(to bottom right, rgba(255,255,255,0.62), rgba(255,255,255,0.62)),
+    var(--bg-image) center/cover no-repeat,
+    #f6f3ef;
 }
 
 

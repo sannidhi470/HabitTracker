@@ -7,6 +7,9 @@ import Meditation from './pages/Meditation.jsx'
 import Workout from './pages/Workout.jsx'
 import Journaling from './pages/Journaling.jsx'
 import Progress from './pages/Progress.jsx'
+import CustomHabit from './pages/CustomHabit.jsx'
+import HabitSetup from './pages/HabitSetup.jsx'
+import AIHabitSuggest from './pages/AIHabitSuggest.jsx'
 
 function App() {
   return (
@@ -14,6 +17,9 @@ function App() {
       <Route path="/" element={<Navigate to="/auth" replace />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/selection" element={<Selection />} />
+      <Route path="/custom-habit" element={<CustomHabit />} />
+      <Route path="/ai-suggest" element={<AIHabitSuggest />} />
+      <Route path="/habit/:slug" element={<HabitSetup />} />
       <Route path="/reading" element={<Reading />} />
       <Route path="/meditation" element={<Meditation />} />
       <Route path="/workout" element={<Workout />} />

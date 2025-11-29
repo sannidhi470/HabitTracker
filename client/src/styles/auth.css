@@ -484,7 +484,14 @@ body {
 }
 
 .actions {
-  display: grid;
+  display: flex;
+  justify-content: center;
+}
+
+/* Scope-specific override to ensure centering within the auth card even if other pages define .actions */
+.card .actions {
+  display: flex;
+  justify-content: center;
 }
 .btn .spinner {
   width: 16px;

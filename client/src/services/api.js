@@ -57,12 +57,90 @@ async function parseNumberResponse(res) {
   throw new Error('Response did not contain a number')
 }
 
+function todayLocalYmd() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${dd}`
+}
+
 export async function getHabitIdByName(name) {
   console.debug('[API] getHabitIdByName start', { name })
   const res = await fetchWithFallback(`/api/habit/getHabitId?name=${encodeURIComponent(name)}`, { method: 'GET' })
   const id = await parseNumberResponse(res)
   console.debug('[API] getHabitIdByName success', { name, id })
   return id
+}
+
+async function deleteWithBody(path, payload) {
+  let lastErr
+  for (const base of BASES) {
+    const url = base + path
+    try {
+      console.debug('[API] deleteWithBody request', { url, payload })
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const ok = res.status === 200 || res.status === 204 || res.status === 404
+      if (!ok) {
+        console.warn('[API] deleteWithBody unexpected status', { url, status: res.status })
+      }
+      if (ok) return true
+      lastErr = new Error(`Unexpected status ${res.status}`)
+    } catch (err) {
+      console.error('[API] deleteWithBody failed', { url, error: String(err) })
+      lastErr = err
+    }
+  }
+  throw lastErr
+}
+
+export async function deleteUserHabit({ userId, habitId }) {
+  console.debug('[API] deleteUserHabit start', { userId, habitId })
+  await deleteWithBody('/api/userhabit/deleteUserHabit', { userId, habitId })
+  console.debug('[API] deleteUserHabit success', { userId, habitId })
+}
+
+export async function getPlansByUserId(userId) {
+  console.debug('[API] getPlansByUserId start', { userId })
+  let lastErr
+  for (const base of BASES) {
+    const url = base + `/api/plan/getPlansByUserId?userId=${encodeURIComponent(userId)}`
+    try {
+      const res = await fetch(url, { method: 'GET' })
+      if (res.status === 200) {
+        const data = await parseJsonResponse(res)
+        const list = Array.isArray(data) ? data : []
+        console.debug('[API] getPlansByUserId success', { count: list.length })
+        return list
+      }
+      if (res.status === 404) {
+        console.debug('[API] getPlansByUserId not found 404')
+        return []
+      }
+      console.warn('[API] getPlansByUserId unexpected status', { status: res.status })
+      lastErr = new Error(`Unexpected status ${res.status}`)
+    } catch (err) {
+      console.error('[API] getPlansByUserId failed', { url, error: String(err) })
+      lastErr = err
+    }
+  }
+  throw lastErr
+}
+
+export async function deletePlan({ userId, habitId }) {
+  console.debug('[API] deletePlan start', { userId, habitId })
+  await deleteWithBody('/api/plan/deletePlan', { userId, habitId })
+  console.debug('[API] deletePlan success', { userId, habitId })
+}
+
+export async function deleteProgressRecords({ userId, habitId }) {
+  console.debug('[API] deleteProgressRecords start', { userId, habitId })
+  await deleteWithBody('/api/progress/deleteRecords', { userId, habitId })
+  console.debug('[API] deleteProgressRecords success', { userId, habitId })
 }
 
 export async function getUserIdByEmail(email) {
@@ -109,6 +187,18 @@ export async function addPlan(plan) {
   throw lastErr
 }
 
+export async function addHabit({ key, unit }) {
+  console.debug('[API] addHabit start', { key, unit })
+  const res = await fetchWithFallback('/api/habit/addHabit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, unit }),
+  })
+  const data = await parseJsonResponse(res)
+  console.debug('[API] addHabit success', { status: res.status, data })
+  return data
+}
+
 export async function getUserHabits(userId) {
   console.debug('[API] getUserHabits start', { userId })
   const res = await fetchWithFallback(`/api/userhabit/getHabits?userId=${encodeURIComponent(userId)}`, { method: 'GET' })
@@ -146,6 +236,31 @@ export async function getPlan({ userId, habitId }) {
   throw lastErr
 }
 
+export async function hasPlansForUser(userId) {
+  console.debug('[API] hasPlansForUser start', { userId })
+  let lastErr
+  for (const base of BASES) {
+    const url = base + `/api/plan/getPlansByUserId?userId=${encodeURIComponent(userId)}`
+    try {
+      const res = await fetch(url, { method: 'GET' })
+      if (res.status === 200) {
+        console.debug('[API] hasPlansForUser success 200')
+        return true
+      }
+      if (res.status === 404) {
+        console.debug('[API] hasPlansForUser not found 404')
+        return false
+      }
+      console.warn('[API] hasPlansForUser unexpected status', { status: res.status })
+      lastErr = new Error(`Unexpected status ${res.status}`)
+    } catch (err) {
+      console.error('[API] hasPlansForUser failed', { url, error: String(err) })
+      lastErr = err
+    }
+  }
+  throw lastErr
+}
+
 export async function logProgress({ userId, habitId, date, amount, mode = 'add', note = '' }) {
   console.debug('[API] logProgress start', { userId, habitId, date, amount, mode })
   const res = await fetchWithFallback('/api/progress/log', {
@@ -170,24 +285,31 @@ export async function getProgressSummaryBatch({ userId, habitIds }) {
   return data || {}
 }
 
-export async function addProgress({ userId, habitId, logValue }) {
-  console.debug('[API] addProgress start', { userId, habitId, logValue })
+export async function addProgress({ userId, habitId, logValue, timestamp }) {
+  console.debug('[API] addProgress start', { userId, habitId, logValue, timestamp })
+  const normalizedTimestamp = (() => {
+    if (timestamp instanceof Date) return timestamp.toISOString()
+    if (typeof timestamp === 'number') return new Date(timestamp).toISOString()
+    if (typeof timestamp === 'string' && timestamp) return timestamp
+    return new Date().toISOString()
+  })()
   const res = await fetchWithFallback('/api/progress/addProgress', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, habitId, logValue }),
+    body: JSON.stringify({ userId, habitId, logValue, timestamp: normalizedTimestamp }),
   })
   const data = await parseJsonResponse(res)
   console.debug('[API] addProgress success', { status: res.status, data })
   return data
 }
 
-export async function getLatestProgress({ userId, habitId }) {
-  console.debug('[API] getLatestProgress start', { userId, habitId })
+export async function getLatestProgress({ userId, habitId, timestamp }) {
+  const ymd = (typeof timestamp === 'string' && timestamp) ? timestamp : todayLocalYmd()
+  console.debug('[API] getLatestProgress start', { userId, habitId, timestamp: ymd })
   const res = await fetchWithFallback('/api/progress/latest', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, habitId }),
+    body: JSON.stringify({ userId, habitId, timestamp: ymd }),
   })
   const data = await parseJsonResponse(res)
   console.debug('[API] getLatestProgress success', { status: res.status, data })
@@ -205,6 +327,29 @@ export async function getProgressRecords({ userId, habitId }) {
   const list = Array.isArray(data) ? data : []
   console.debug('[API] getProgressRecords success', { count: list.length })
   return list
+}
+
+export async function getHabitUnit(habitId) {
+  console.debug('[API] getHabitUnit start', { habitId })
+  const res = await fetchWithFallback(`/api/habit/getHabitUnit?id=${encodeURIComponent(habitId)}`, { method: 'GET' })
+  // Response may be raw string or object; normalize
+  const type = res.headers.get('content-type') || ''
+  if (type.includes('application/json')) {
+    try {
+      const json = await res.json()
+      if (typeof json === 'string') return json
+      if (json && typeof json === 'object') {
+        return String(json.unit ?? json.habitUnit ?? '').trim()
+      }
+    } catch (_) {}
+    return ''
+  }
+  try {
+    const text = await res.text()
+    return String(text || '').trim()
+  } catch (_) {
+    return ''
+  }
 }
 
 

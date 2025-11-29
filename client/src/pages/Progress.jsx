@@ -4,8 +4,9 @@ import '../styles/dashboard.css'
 import { initThemeFromStorage, setTheme as applyTheme, showToast } from '../services/auth.js'
 import { getUserEmail, getUserId, saveUserId } from '../services/session.js'
 import { clearSession } from '../services/session.js'
-import { getUserIdByEmail, getUserHabits, getPlan, getHabitIdByName, getProgressRecords } from '../services/api.js'
+import { getUserIdByEmail, getPlansByUserId, getHabitIdByName, getProgressRecords } from '../services/api.js'
 import ProgressChart from '../components/ProgressChart.jsx'
+import { computeAccent } from '../services/images.js'
 
 export default function Progress() {
   const [theme, setTheme] = useState(null)
@@ -55,98 +56,57 @@ export default function Progress() {
         }
         setCurrentUserId(userId)
 
-        // Read user's habits
-        const habits = await getUserHabits(userId)
-        const allowed = ['reading', 'meditation', 'workout', 'journaling']
-        const idToKey = { 11: 'reading', 12: 'meditation', 13: 'workout', 14: 'journaling' }
-        const toKey = (item) => {
-          if (typeof item === 'number') return idToKey[item] || ''
-          const byId = Number(item?.habitId ?? item?.id ?? item?.habitID ?? item?.HabitId ?? item?.HabitID)
-          if (Number.isFinite(byId) && idToKey[byId]) return idToKey[byId]
-          const raw = typeof item === 'string'
-            ? item
-            : (item?.key ?? item?.name ?? item?.habitName ?? item?.HabitName ?? item?.title ?? '')
-          const k = String(raw || '').toLowerCase().replace(/\s+/g, '')
-          if (allowed.includes(k)) return k
-          if (k.includes('read')) return 'reading'
-          if (k.includes('medit')) return 'meditation'
-          if (k.includes('work')) return 'workout'
-          if (k.includes('journal')) return 'journaling'
-          return ''
-        }
-        const toId = (item) => {
-          if (typeof item === 'number') return Number(item)
-          if (!item || typeof item !== 'object') return NaN
-          const directCandidates = [item?.habitId, item?.habit_id, item?.HabitId, item?.HabitID]
-          for (const c of directCandidates) {
-            const n = Number(c)
-            if (Number.isFinite(n) && n > 0) return n
-          }
-          const nested = item?.habit || item?.Habit || null
-          if (nested && typeof nested === 'object') {
-            const nestedCandidates = [nested?.habitId, nested?.habit_id, nested?.id, nested?.HabitId, nested?.HabitID]
-            for (const c of nestedCandidates) {
-              const n = Number(c)
-              if (Number.isFinite(n) && n > 0) return n
-            }
-          }
-          return NaN
-        }
-        const keys = Array.from(new Set((habits || []).map(toKey).filter((k) => allowed.includes(k))))
-        if (!keys.length) {
-          navigate('/selection', { replace: true })
+        // Plans for user; only show these habits
+        const plans = await getPlansByUserId(userId)
+        if (!Array.isArray(plans) || plans.length === 0) {
+          setVisibleHabits([])
+          setHabitIdsByKey({})
+          setPlansByKey({})
+          setRawByKey({})
           return
         }
-        const all = [
-          { key: 'reading', label: 'Reading', accent: '#f97316' },
-          { key: 'meditation', label: 'Meditation', accent: '#f97316' },
-          { key: 'workout', label: 'Workout', accent: '#f97316' },
-          { key: 'journaling', label: 'Journaling', accent: '#f97316' },
-        ]
-        setVisibleHabits(all.filter((h) => keys.includes(h.key)))
+        const builtins = new Set(['reading', 'meditation', 'workout', 'journaling'])
+        const slugify = (s) => String(s || '').trim().toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')
+        const toTitle = (s) => String(s || '').replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b\w/g, (c) => c.toUpperCase())
+        const visible = []
         const idByKey = {}
-        for (const item of habits) {
-          const k = toKey(item)
-          if (!allowed.includes(k)) continue
-          const id = toId(item)
-          if (Number.isFinite(id) && id > 0 && !idByKey[k]) idByKey[k] = id
-        }
-        const keyToName = { reading: 'Reading', meditation: 'Meditation', workout: 'Workout', journaling: 'Journaling' }
-        const missing = keys.filter((k) => !Number.isFinite(idByKey[k]))
-        if (missing.length > 0) {
-          await Promise.all(missing.map(async (k) => {
-            try {
-              const id = await getHabitIdByName(keyToName[k])
-              if (Number.isFinite(id) && id > 0) idByKey[k] = id
-            } catch (_) {}
-          }))
-        }
-        setHabitIdsByKey(idByKey)
-
-        // Plans
-        const pairsPlan = await Promise.all(keys.map(async (k) => {
-          const id = idByKey[k]
-          if (!Number.isFinite(id) || id <= 0) return [k, null]
-          try {
-            const plan = await getPlan({ userId, habitId: id })
-            return [k, plan]
-          } catch (err) {
-            console.error('[Progress] getPlan failed', { key: k, err })
-            return [k, null]
-          }
-        }))
         const planMap = {}
-        for (const [k, p] of pairsPlan) {
-          if (p) planMap[k] = p
+        for (const p of plans) {
+          const habitObj = p?.habit || {}
+          const rawKey = String(habitObj?.key || '').trim().toLowerCase()
+          if (!rawKey) continue
+          const resolvedKey = builtins.has(rawKey) ? rawKey : `custom:${slugify(rawKey)}`
+          const label = toTitle(habitObj?.key || rawKey)
+          const hidCandidates = [habitObj?.habit_id, habitObj?.habitId, habitObj?.id, p?.habitId]
+          let hid = NaN
+          for (const c of hidCandidates) {
+            const n = Number(c)
+            if (Number.isFinite(n) && n > 0) { hid = n; break }
+          }
+          if (!Number.isFinite(hid) || hid <= 0) continue
+          if (!idByKey[resolvedKey]) idByKey[resolvedKey] = hid
+          visible.push({ key: resolvedKey, label, accent: computeAccent(label) })
+          planMap[resolvedKey] = {
+            planType: String(p?.planType || p?.plan_type || '').toUpperCase(),
+            startDate: p?.start_date || p?.startDate || '',
+            endDate: p?.end_date || p?.endDate || '',
+            planLength: Number(p?.plan_length || p?.planLength || 0),
+            perDay: Number(p?.per_day || p?.perDay || 0),
+            habitUnit: String(p?.habit_unit || habitObj?.unit || p?.unit || '').toLowerCase(),
+            unit: String(p?.habit_unit || habitObj?.unit || p?.unit || '').toLowerCase(),
+          }
         }
+        setVisibleHabits(visible)
+        setHabitIdsByKey(idByKey)
         setPlansByKey(planMap)
 
         // Progress raw
+        const keys = visible.map((v) => v.key)
         const pairsRaw = await Promise.all(keys.map(async (k) => {
-          const id = idByKey[k]
-          if (!Number.isFinite(id) || id <= 0) return [k, []]
+          const hid = idByKey[k]
+          if (!Number.isFinite(hid) || hid <= 0) return [k, []]
           try {
-            const recs = await getProgressRecords({ userId, habitId: id })
+            const recs = await getProgressRecords({ userId, habitId: hid })
             return [k, Array.isArray(recs) ? recs : []]
           } catch (err) {
             console.error('[Progress] getProgressRecords failed', { key: k, err })
@@ -219,17 +179,21 @@ export default function Progress() {
 
   const aggregateRange = (records, start, end) => {
     try {
-      const byDay = new Map()
+      // Track the latest log per local day (not the sum)
+      const byDayLatest = new Map() // ymd -> { id: number, value: number }
       for (const r of Array.isArray(records) ? records : []) {
-        const ts = r?.timestamp
+        const ymdRaw = String(r?.date || '').trim()
         const v = Number(r?.logValue) || 0
-        if (!ts || !Number.isFinite(v) || v <= 0) continue
-        const d = new Date(ts)
-        if (Number.isNaN(d.getTime())) continue
-        d.setHours(0, 0, 0, 0)
+        const recId = Number(r?.id) || 0
+        if (!ymdRaw || !Number.isFinite(v) || v < 0) continue
+        const d = parseYmd(ymdRaw)
+        if (!d) continue
         if (d < start || d > end) continue
         const ymd = toYmd(d)
-        byDay.set(ymd, (byDay.get(ymd) || 0) + v)
+        const prev = byDayLatest.get(ymd)
+        if (!prev || recId > (prev.id || 0)) {
+          byDayLatest.set(ymd, { id: recId, value: v })
+        }
       }
       const out = []
       const cursor = new Date(start)
@@ -237,7 +201,8 @@ export default function Progress() {
         const ymd = toYmd(cursor)
         const dd = String(cursor.getDate()).padStart(2, '0')
         const mm = String(cursor.getMonth() + 1).padStart(2, '0')
-        out.push({ date: ymd, dateLabel: `${dd}/${mm}`, value: Number(byDay.get(ymd) || 0) })
+        const latest = byDayLatest.get(ymd)
+        out.push({ date: ymd, dateLabel: `${dd}/${mm}`, value: Number(latest?.value || 0) })
         cursor.setDate(cursor.getDate() + 1)
       }
       return out
@@ -258,6 +223,57 @@ export default function Progress() {
   const unitForKey = (key) => {
     return String(plansByKey[key]?.habitUnit || plansByKey[key]?.unit || 'units')
   }
+
+  const computeStreakForRecords = (records, perDay) => {
+    try {
+      const target = Number(perDay) || 0
+      if (target <= 0) return 0
+      // Use latest entry per local day (not sum), to match "latest" semantics
+      const latestByYmd = new Map() // ymd -> { id: number, value: number }
+      for (const r of Array.isArray(records) ? records : []) {
+        const ymdRaw = String(r?.date || '').trim()
+        const v = Number(r?.logValue) || 0
+        const recId = Number(r?.id) || 0
+        if (!ymdRaw || !Number.isFinite(v) || v < 0) continue
+        const d = parseYmd(ymdRaw)
+        if (!d) continue
+        const ymd = toYmd(d)
+        const prev = latestByYmd.get(ymd)
+        if (!prev || recId > (prev.id || 0)) {
+          latestByYmd.set(ymd, { id: recId, value: v })
+        }
+      }
+      // Count back from today while meeting/exceeding target
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      let streak = 0
+      const cursor = new Date(today)
+      // Safety cap to avoid infinite loops
+      for (let i = 0; i < 366; i++) {
+        const ymd = toYmd(cursor)
+        const val = Number(latestByYmd.get(ymd)?.value || 0)
+        if (val >= target) {
+          streak += 1
+          cursor.setDate(cursor.getDate() - 1)
+          continue
+        }
+        break
+      }
+      return streak
+    } catch (err) {
+      console.error('[Progress] computeStreakForRecords failed', err)
+      return 0
+    }
+  }
+
+  const streakByKey = useMemo(() => {
+    const out = {}
+    for (const k of Object.keys(rawByKey)) {
+      const per = Number(plansByKey[k]?.perDay) || 0
+      out[k] = computeStreakForRecords(rawByKey[k], per)
+    }
+    return out
+  }, [rawByKey, plansByKey])
 
   const rangeLabel = useMemo(() => {
     const toShort = (d) => {
@@ -323,7 +339,12 @@ export default function Progress() {
               <article key={h.key} className="stat-card" style={{ '--accent': h.accent }}>
                 <header className="stat-head">
                   <h3 className="stat-title">{h.label}</h3>
-                  <span className="stat-meta">{plansByKey[h.key] ? `Target: ${plansByKey[h.key].perDay} ${unitForKey(h.key)}/day` : 'No plan set'}</span>
+                  <span className="stat-meta">
+                    {plansByKey[h.key]
+                      ? `Target: ${plansByKey[h.key].perDay} ${unitForKey(h.key)}/day`
+                      : 'No plan set'}
+                    {Number(streakByKey[h.key]) > 0 ? ` · 🔥 ${streakByKey[h.key]}-day streak` : ''}
+                  </span>
                 </header>
                 <div className="stat-body">
                   <ProgressChart
