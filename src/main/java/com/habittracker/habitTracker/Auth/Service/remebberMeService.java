@@ -24,4 +24,12 @@ public class remebberMeService {
     public Optional<RememberMeToken> findByTokenHash(String tokenHash) {
         return remeberMeRepo.findByTokenHash(tokenHash);
     }
+
+    public void deleteByTokenHash(String tokenHash) {
+        remeberMeRepo.deleteByTokenHash(tokenHash);
+    }
+
+    public void deleteAllForUser(Long userId) {
+        remeberMeRepo.deleteAllByUserId(userId);
+    }
 }

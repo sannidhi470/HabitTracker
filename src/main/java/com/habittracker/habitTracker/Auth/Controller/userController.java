@@ -5,11 +5,15 @@ import com.habittracker.habitTracker.Auth.DTO.LoginRequest;
 import com.habittracker.habitTracker.Auth.Model.User;
 import com.habittracker.habitTracker.Auth.Service.remebberMeService;
 import com.habittracker.habitTracker.Auth.Service.userService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -90,7 +94,7 @@ public class userController {
                 remebberMeService.saveToken(user.getId(), tokenHash);
                 ResponseCookie cookie = ResponseCookie.from("remember_me", token)
                         .httpOnly(true)
-                        .secure(true)
+                        .secure(false)
                         .path("/")
                         .maxAge(60 * 60 * 24 * 30)   // 30 days
                         .sameSite("Lax")
@@ -102,6 +106,20 @@ public class userController {
         catch(RuntimeException e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> Me(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null || !(auth.getPrincipal() instanceof User)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        User u = (User) auth.getPrincipal();
+        Map<String, Object> body = new HashMap<>();
+        body.put("userId", u.getId());
+        body.put("email", u.getEmail());
+        body.put("fullName", u.getFullName());
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/getUsers")
@@ -121,5 +139,40 @@ public class userController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(List.of("Error: " + e.getMessage()));
         }
 
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+        String rawToken = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie c : cookies) {
+                if ("remember_me".equals(c.getName())) {
+                    rawToken = c.getValue();
+                    break;
+                }
+            }
+        }
+
+        try {
+            if (rawToken != null && !rawToken.isBlank()) {
+                String hash = HashUtil.sha256Hex(rawToken);
+                remebberMeService.deleteByTokenHash(hash);
+            }
+        } catch (Exception ignored) {
+        }
+
+        // Clear cookie (note: for HTTP localhost dev, use .secure(false))
+        ResponseCookie cleared = ResponseCookie.from("remember_me", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        response.addHeader("Set-Cookie", cleared.toString());
+
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.ok().build();
     }
 }

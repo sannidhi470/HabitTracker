@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface remeberMeRepo extends JpaRepository<RememberMeToken, Long> {
     Optional<RememberMeToken> findByTokenHash(String token);
+    void deleteByTokenHash(String tokenHash);
+    void deleteAllByUserId(Long userId);
 }
