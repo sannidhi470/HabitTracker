@@ -204,6 +204,7 @@
     const emailErr = qs("#login-email-error");
     const pass = qs("#login-password");
     const passErr = qs("#login-password-error");
+    const remember = qs("#login-remember");
     const submit = qs("#login-submit");
     const msg = qs("#login-form-msg");
 
@@ -233,18 +234,20 @@
         const payload = {
           email: email.value.trim(),
           password: pass.value,
+          rememberMe: !!(remember && remember.checked),
         };
         const doRequest = (url) => fetch(url, {
           method: "POST",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         let response;
         try {
-          response = await doRequest("http://localhost:8081/api/login");
+          response = await doRequest("http://localhost:8081/api/user/login");
         } catch (err1) {
           try {
-            response = await doRequest("http://127.0.0.1:8081/api/login");
+            response = await doRequest("http://127.0.0.1:8081/api/user/login");
           } catch (err2) {
             console.error("Login request failed", err1, err2);
             throw err2;
