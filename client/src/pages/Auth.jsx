@@ -13,7 +13,8 @@ import {
   showToast,
   googleAuthWithIdToken,
 } from '../services/auth.js'
-import { saveUserEmail, saveUserId } from '../services/session.js'
+import { getMe } from '../services/auth.js'
+import { saveUserEmail, saveUserId, saveUserEmailSession, saveUserIdSession } from '../services/session.js'
 import { getUserIdByEmail, getUserHabits } from '../services/api.js'
 
 export default function Auth() {
@@ -24,6 +25,20 @@ export default function Auth() {
     const initial = initThemeFromStorage()
     setTheme(initial)
   }, [])
+  // If already authenticated via remember-me, skip this page
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const me = await getMe()
+        if (!mounted) return
+        if (me && Number.isFinite(me.userId) && me.userId > 0) {
+          navigate('/dashboard', { replace: true })
+        }
+      } catch (_) {}
+    })()
+    return () => { mounted = false }
+  }, [navigate])
   const onToggleTheme = () => {
     const current = document.documentElement.getAttribute('data-theme')
     const next = current === 'dark' ? 'light' : 'dark'
@@ -143,12 +158,14 @@ export default function Auth() {
       const res = await loginRequest({ email: loginEmail.trim(), password: loginPassword, rememberMe: loginRemember })
       if (res.status === 200) {
         const email = loginEmail.trim()
-        saveUserEmail(email)
+        if (loginRemember) saveUserEmail(email)
+        else saveUserEmailSession(email)
         // Fetch user id and habits to decide redirection
         try {
           const userId = await getUserIdByEmail(email)
           if (Number.isFinite(userId) && userId > 0) {
-            saveUserId(userId)
+            if (loginRemember) saveUserId(userId)
+            else saveUserIdSession(userId)
             const habits = await getUserHabits(userId)
             const hasAny = Array.isArray(habits) && habits.length > 0
             navigate(hasAny ? '/dashboard' : '/selection')
@@ -394,7 +411,7 @@ export default function Auth() {
                     name="password"
                     type={showLoginPassword ? 'text' : 'password'}
                     autoComplete="current-password"
-                    placeholder="••••••••"
+                    placeholder={showLoginPassword ? 'Password' : '••••••••'}
                     required
                     minLength={8}
                     aria-describedby="login-password-error"
@@ -496,7 +513,7 @@ export default function Auth() {
                     name="password"
                     type={showSignupPassword ? 'text' : 'password'}
                     autoComplete="new-password"
-                    placeholder="At least 8 characters"
+                    placeholder={showSignupPassword ? 'Password' : 'At least 8 characters'}
                     required
                     minLength={8}
                     aria-describedby="signup-password-error signup-password-hint"

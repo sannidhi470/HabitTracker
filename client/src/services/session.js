@@ -10,7 +10,14 @@ export function saveUserEmail(email) {
 }
 
 export function getUserEmail() {
-  try { return localStorage.getItem(KEYS.userEmail) || '' } catch (_) { return '' }
+  try {
+    const v = localStorage.getItem(KEYS.userEmail)
+    if (v) return v
+  } catch (_) {}
+  try {
+    const v = sessionStorage.getItem(KEYS.userEmail)
+    return v || ''
+  } catch (_) { return '' }
 }
 
 export function saveUserId(id) {
@@ -22,8 +29,12 @@ export function getUserId() {
     const v = localStorage.getItem(KEYS.userId)
     return v ? Number(v) : 0
   } catch (_) {
-    return 0
+    // fall through
   }
+  try {
+    const v = sessionStorage.getItem(KEYS.userId)
+    return v ? Number(v) : 0
+  } catch (_) { return 0 }
 }
 
 export function saveHabitId(id) {
@@ -52,6 +63,16 @@ export function clearSession() {
   try { localStorage.removeItem(KEYS.userId) } catch (_) {}
   try { localStorage.removeItem(KEYS.habitId) } catch (_) {}
   try { localStorage.removeItem(KEYS.habitKey) } catch (_) {}
+  try { sessionStorage.removeItem(KEYS.userEmail) } catch (_) {}
+  try { sessionStorage.removeItem(KEYS.userId) } catch (_) {}
+}
+
+// Session-only variants (do not survive browser restart)
+export function saveUserEmailSession(email) {
+  try { sessionStorage.setItem(KEYS.userEmail, String(email || '')) } catch (_) {}
+}
+export function saveUserIdSession(id) {
+  try { sessionStorage.setItem(KEYS.userId, String(id)) } catch (_) {}
 }
 
 

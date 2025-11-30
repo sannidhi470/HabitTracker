@@ -1,7 +1,7 @@
 import '../styles/habit-setup.css'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { initThemeFromStorage, setTheme as applyTheme, showToast } from '../services/auth.js'
+import { initThemeFromStorage, setTheme as applyTheme, showToast, logoutRequest } from '../services/auth.js'
 import { getHabitIdByName, getUserIdByEmail, addPlan, getPlan, getUserHabits, getHabitUnit } from '../services/api.js'
 import { getUserEmail, saveHabitId, saveUserId, clearSession } from '../services/session.js'
 
@@ -73,8 +73,11 @@ export default function HabitSetup() {
     setTheme(next)
   }
   const onLogout = () => {
-    clearSession()
-    navigate('/auth', { replace: true })
+    ;(async () => {
+      try { await logoutRequest() } catch (_) {}
+      clearSession()
+      navigate('/auth', { replace: true })
+    })()
   }
 
   useEffect(() => {

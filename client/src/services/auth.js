@@ -1,3 +1,5 @@
+import { API_ORIGIN } from './api'
+
 export const themeKey = 'habit-theme'
 
 export function setTheme(theme) {
@@ -73,36 +75,23 @@ async function postJson(url, payload) {
 }
 
 export async function postWithFallback(path, payload) {
-  const urls = [`http://localhost:8081${path}`, `http://127.0.0.1:8081${path}`]
-  let lastErr
-  for (const u of urls) {
-    try {
-      const res = await postJson(u, payload)
-      return res
-    } catch (err) {
-      lastErr = err
-    }
-  }
-  throw lastErr
+  const u = `${API_ORIGIN}${path}`
+  return fetch(u, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
 }
 
 export async function loginRequest({ email, password, rememberMe }) {
-  const urls = ['http://localhost:8081/api/user/login', 'http://127.0.0.1:8081/api/user/login']
-  let lastErr
-  for (const u of urls) {
-    try {
-      const res = await fetch(u, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, rememberMe: !!rememberMe }),
-      })
-      return res
-    } catch (err) {
-      lastErr = err
-    }
-  }
-  throw lastErr
+  const u = `${API_ORIGIN}/api/user/login`
+  return fetch(u, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, rememberMe: !!rememberMe }),
+  })
 }
 
 export async function signupRequest({ fullName, email, password }) {
@@ -120,11 +109,35 @@ export async function startOAuth(provider) {
 
 // Google sign-in: send ID token to backend for verification
 export async function googleAuthWithIdToken(idToken) {
-  return fetch('http://localhost:8081/api/user/google', {
+  return fetch(`${API_ORIGIN}/api/user/google`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ idToken }),
   })
+}
+
+// GET /api/user/me to check current auth via remember-me cookie
+export async function getMe() {
+  const u = `${API_ORIGIN}/api/user/me`
+  try {
+    const res = await fetch(u, { method: 'GET', credentials: 'include' })
+    if (res.status === 200) {
+      try { return await res.json() } catch (_) { return null }
+    }
+    if (res.status === 401) return null
+  } catch (_) {}
+  return null
+}
+
+// POST /api/user/logout to clear cookie on server
+export async function logoutRequest() {
+  const u = `${API_ORIGIN}/api/user/logout`
+  try {
+    const res = await fetch(u, { method: 'POST', credentials: 'include' })
+    if (res.ok) return true
+  } catch (_) {}
+  return false
 }
 
 

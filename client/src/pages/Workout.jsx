@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/workout.css'
-import { initThemeFromStorage, setTheme as applyTheme, showToast } from '../services/auth.js'
+import { initThemeFromStorage, setTheme as applyTheme, showToast, logoutRequest } from '../services/auth.js'
 import { getHabitIdByName, getUserIdByEmail, addHabitToUser, addPlan } from '../services/api.js'
 import { getUserEmail, saveHabitId, saveUserId, clearSession } from '../services/session.js'
 
@@ -139,8 +139,11 @@ export default function Workout() {
     setTheme(next)
   }
   const onLogout = () => {
-    clearSession()
-    navigate('/auth', { replace: true })
+    ;(async () => {
+      try { await logoutRequest() } catch (_) {}
+      clearSession()
+      navigate('/auth', { replace: true })
+    })()
   }
 
   const todayIso = new Date().toISOString().slice(0, 10)

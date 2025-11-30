@@ -1,7 +1,7 @@
 import '../styles/selection.css'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { initThemeFromStorage, setTheme as applyTheme } from '../services/auth.js'
+import { initThemeFromStorage, setTheme as applyTheme, logoutRequest } from '../services/auth.js'
 import { clearSession, getUserId, getUserEmail, saveUserId } from '../services/session.js'
 import { getUserIdByEmail, getUserHabits, hasPlansForUser } from '../services/api.js'
 import { resolveCustomHabitImage, computeAccent } from '../services/images.js'
@@ -117,8 +117,11 @@ export default function Selection() {
     setTheme(next)
   }
   const onLogout = () => {
-    clearSession()
-    navigate('/auth', { replace: true })
+    ;(async () => {
+      try { await logoutRequest() } catch (_) {}
+      clearSession()
+      navigate('/auth', { replace: true })
+    })()
   }
 
   const onSelect = useCallback((card) => {

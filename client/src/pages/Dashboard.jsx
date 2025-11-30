@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/dashboard.css'
-import { initThemeFromStorage, setTheme as applyTheme, showToast } from '../services/auth.js'
+import { initThemeFromStorage, setTheme as applyTheme, showToast, logoutRequest } from '../services/auth.js'
 import { getUserId, getUserEmail, saveUserId } from '../services/session.js'
 import { clearSession } from '../services/session.js'
 import { getUserIdByEmail, getPlansByUserId, getHabitIdByName, addProgress, getLatestProgress, deletePlan, deleteProgressRecords } from '../services/api.js'
@@ -144,8 +144,11 @@ export default function Dashboard() {
     setTheme(next)
   }
   const onLogout = () => {
-    clearSession()
-    navigate('/auth', { replace: true })
+    ;(async () => {
+      try { await logoutRequest() } catch (_) {}
+      clearSession()
+      navigate('/auth', { replace: true })
+    })()
   }
 
   const todayIso = () => {

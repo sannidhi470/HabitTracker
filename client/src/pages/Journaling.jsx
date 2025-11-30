@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/journaling.css'
-import { initThemeFromStorage, setTheme as applyTheme, showToast } from '../services/auth.js'
+import { initThemeFromStorage, setTheme as applyTheme, showToast, logoutRequest } from '../services/auth.js'
 import { clearSession } from '../services/session.js'
 
 function pad2(n) {
@@ -140,8 +140,11 @@ export default function Journaling() {
     setTheme(next)
   }
   const onLogout = () => {
-    clearSession()
-    navigate('/auth', { replace: true })
+    ;(async () => {
+      try { await logoutRequest() } catch (_) {}
+      clearSession()
+      navigate('/auth', { replace: true })
+    })()
   }
 
   // Form state

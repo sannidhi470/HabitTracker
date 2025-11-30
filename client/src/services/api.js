@@ -1,20 +1,17 @@
-const BASES = ['http://localhost:8081', 'http://127.0.0.1:8081']
+export const API_ORIGIN = import.meta?.env?.VITE_API_ORIGIN || 'http://localhost:8081'
 
 async function fetchWithFallback(path, init) {
-  let lastErr
-  for (const base of BASES) {
-    try {
-      console.debug('[API] request', { url: base + path, method: (init && init.method) || 'GET' })
-      const res = await fetch(base + path, init)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      console.debug('[API] response ok', { url: base + path, status: res.status, contentType: res.headers.get('content-type') })
-      return res
-    } catch (err) {
-      console.error('[API] request failed', { url: base + path, method: (init && init.method) || 'GET', error: String(err) })
-      lastErr = err
-    }
+  const url = API_ORIGIN + path
+  try {
+    console.debug('[API] request', { url, method: (init && init.method) || 'GET' })
+    const res = await fetch(url, { credentials: 'include', ...(init || {}) })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    console.debug('[API] response ok', { url, status: res.status, contentType: res.headers.get('content-type') })
+    return res
+  } catch (err) {
+    console.error('[API] request failed', { url, method: (init && init.method) || 'GET', error: String(err) })
+    throw err
   }
-  throw lastErr
 }
 
 async function parseJsonResponse(res) {
@@ -74,28 +71,25 @@ export async function getHabitIdByName(name) {
 }
 
 async function deleteWithBody(path, payload) {
-  let lastErr
-  for (const base of BASES) {
-    const url = base + path
-    try {
-      console.debug('[API] deleteWithBody request', { url, payload })
-      const res = await fetch(url, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      const ok = res.status === 200 || res.status === 204 || res.status === 404
-      if (!ok) {
-        console.warn('[API] deleteWithBody unexpected status', { url, status: res.status })
-      }
-      if (ok) return true
-      lastErr = new Error(`Unexpected status ${res.status}`)
-    } catch (err) {
-      console.error('[API] deleteWithBody failed', { url, error: String(err) })
-      lastErr = err
+  const url = API_ORIGIN + path
+  try {
+    console.debug('[API] deleteWithBody request', { url, payload })
+    const res = await fetch(url, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const ok = res.status === 200 || res.status === 204 || res.status === 404
+    if (!ok) {
+      console.warn('[API] deleteWithBody unexpected status', { url, status: res.status })
     }
+    if (ok) return true
+    throw new Error(`Unexpected status ${res.status}`)
+  } catch (err) {
+    console.error('[API] deleteWithBody failed', { url, error: String(err) })
+    throw err
   }
-  throw lastErr
 }
 
 export async function deleteUserHabit({ userId, habitId }) {
@@ -106,29 +100,25 @@ export async function deleteUserHabit({ userId, habitId }) {
 
 export async function getPlansByUserId(userId) {
   console.debug('[API] getPlansByUserId start', { userId })
-  let lastErr
-  for (const base of BASES) {
-    const url = base + `/api/plan/getPlansByUserId?userId=${encodeURIComponent(userId)}`
-    try {
-      const res = await fetch(url, { method: 'GET' })
-      if (res.status === 200) {
-        const data = await parseJsonResponse(res)
-        const list = Array.isArray(data) ? data : []
-        console.debug('[API] getPlansByUserId success', { count: list.length })
-        return list
-      }
-      if (res.status === 404) {
-        console.debug('[API] getPlansByUserId not found 404')
-        return []
-      }
-      console.warn('[API] getPlansByUserId unexpected status', { status: res.status })
-      lastErr = new Error(`Unexpected status ${res.status}`)
-    } catch (err) {
-      console.error('[API] getPlansByUserId failed', { url, error: String(err) })
-      lastErr = err
+  const url = API_ORIGIN + `/api/plan/getPlansByUserId?userId=${encodeURIComponent(userId)}`
+  try {
+    const res = await fetch(url, { method: 'GET', credentials: 'include' })
+    if (res.status === 200) {
+      const data = await parseJsonResponse(res)
+      const list = Array.isArray(data) ? data : []
+      console.debug('[API] getPlansByUserId success', { count: list.length })
+      return list
     }
+    if (res.status === 404) {
+      console.debug('[API] getPlansByUserId not found 404')
+      return []
+    }
+    console.warn('[API] getPlansByUserId unexpected status', { status: res.status })
+    throw new Error(`Unexpected status ${res.status}`)
+  } catch (err) {
+    console.error('[API] getPlansByUserId failed', { url, error: String(err) })
+    throw err
   }
-  throw lastErr
 }
 
 export async function deletePlan({ userId, habitId }) {
@@ -167,24 +157,21 @@ export async function addHabitToUser({ userId, habitId }) {
 
 export async function addPlan(plan) {
   console.debug('[API] addPlan start', plan)
-  let lastErr
-  for (const base of BASES) {
-    const url = base + '/api/plan/addPlan'
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(plan),
-      })
-      console.debug('[API] addPlan response', { url, status: res.status })
-      // Return raw response so caller can handle status 200/400 specifically
-      return res
-    } catch (err) {
-      console.error('[API] addPlan failed', { url, error: String(err) })
-      lastErr = err
-    }
+  const url = API_ORIGIN + '/api/plan/addPlan'
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(plan),
+    })
+    console.debug('[API] addPlan response', { url, status: res.status })
+    // Return raw response so caller can handle status 200/400 specifically
+    return res
+  } catch (err) {
+    console.error('[API] addPlan failed', { url, error: String(err) })
+    throw err
   }
-  throw lastErr
 }
 
 export async function addHabit({ key, unit }) {
@@ -201,7 +188,7 @@ export async function addHabit({ key, unit }) {
 
 export async function getUserHabits(userId) {
   console.debug('[API] getUserHabits start', { userId })
-  const res = await fetchWithFallback(`/api/userhabit/getHabits?userId=${encodeURIComponent(userId)}`, { method: 'GET' })
+  const res = await fetchWithFallback(`/api/userhabit/getHabits?userId=${encodeURIComponent(userId)}`, { method: 'GET', credentials: 'include' })
   const data = await parseJsonResponse(res)
   console.debug('[API] getUserHabits success', { count: Array.isArray(data) ? data.length : 0, raw: data })
   return Array.isArray(data) ? data : []
@@ -209,56 +196,50 @@ export async function getUserHabits(userId) {
 
 export async function getPlan({ userId, habitId }) {
   console.debug('[API] getPlan start', { userId, habitId })
-  let lastErr
-  for (const base of BASES) {
-    const url = base + '/api/plan/getPlan'
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, habitId }),
-      })
-      if (res.status === 200) {
-        const data = await parseJsonResponse(res)
-        console.debug('[API] getPlan success', { userId, habitId, data })
-        return data
-      }
-      if (res.status === 404) {
-        console.debug('[API] getPlan not found', { userId, habitId })
-        return null
-      }
-      console.warn('[API] getPlan unexpected status', { status: res.status })
-    } catch (err) {
-      console.error('[API] getPlan failed', { url, error: String(err) })
-      lastErr = err
+  const url = API_ORIGIN + '/api/plan/getPlan'
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, habitId }),
+    })
+    if (res.status === 200) {
+      const data = await parseJsonResponse(res)
+      console.debug('[API] getPlan success', { userId, habitId, data })
+      return data
     }
+    if (res.status === 404) {
+      console.debug('[API] getPlan not found', { userId, habitId })
+      return null
+    }
+    console.warn('[API] getPlan unexpected status', { status: res.status })
+    throw new Error(`Unexpected status ${res.status}`)
+  } catch (err) {
+    console.error('[API] getPlan failed', { url, error: String(err) })
+    throw err
   }
-  throw lastErr
 }
 
 export async function hasPlansForUser(userId) {
   console.debug('[API] hasPlansForUser start', { userId })
-  let lastErr
-  for (const base of BASES) {
-    const url = base + `/api/plan/getPlansByUserId?userId=${encodeURIComponent(userId)}`
-    try {
-      const res = await fetch(url, { method: 'GET' })
-      if (res.status === 200) {
-        console.debug('[API] hasPlansForUser success 200')
-        return true
-      }
-      if (res.status === 404) {
-        console.debug('[API] hasPlansForUser not found 404')
-        return false
-      }
-      console.warn('[API] hasPlansForUser unexpected status', { status: res.status })
-      lastErr = new Error(`Unexpected status ${res.status}`)
-    } catch (err) {
-      console.error('[API] hasPlansForUser failed', { url, error: String(err) })
-      lastErr = err
+  const url = API_ORIGIN + `/api/plan/getPlansByUserId?userId=${encodeURIComponent(userId)}`
+  try {
+    const res = await fetch(url, { method: 'GET', credentials: 'include' })
+    if (res.status === 200) {
+      console.debug('[API] hasPlansForUser success 200')
+      return true
     }
+    if (res.status === 404) {
+      console.debug('[API] hasPlansForUser not found 404')
+      return false
+    }
+    console.warn('[API] hasPlansForUser unexpected status', { status: res.status })
+    throw new Error(`Unexpected status ${res.status}`)
+  } catch (err) {
+    console.error('[API] hasPlansForUser failed', { url, error: String(err) })
+    throw err
   }
-  throw lastErr
 }
 
 export async function logProgress({ userId, habitId, date, amount, mode = 'add', note = '' }) {
@@ -295,6 +276,7 @@ export async function addProgress({ userId, habitId, logValue, timestamp }) {
   })()
   const res = await fetchWithFallback('/api/progress/addProgress', {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, habitId, logValue, timestamp: normalizedTimestamp }),
   })
@@ -308,6 +290,7 @@ export async function getLatestProgress({ userId, habitId, timestamp }) {
   console.debug('[API] getLatestProgress start', { userId, habitId, timestamp: ymd })
   const res = await fetchWithFallback('/api/progress/latest', {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, habitId, timestamp: ymd }),
   })
@@ -320,6 +303,7 @@ export async function getProgressRecords({ userId, habitId }) {
   console.debug('[API] getProgressRecords start', { userId, habitId })
   const res = await fetchWithFallback('/api/progress/getRecords', {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, habitId }),
   })
@@ -331,7 +315,7 @@ export async function getProgressRecords({ userId, habitId }) {
 
 export async function getHabitUnit(habitId) {
   console.debug('[API] getHabitUnit start', { habitId })
-  const res = await fetchWithFallback(`/api/habit/getHabitUnit?id=${encodeURIComponent(habitId)}`, { method: 'GET' })
+  const res = await fetchWithFallback(`/api/habit/getHabitUnit?id=${encodeURIComponent(habitId)}`, { method: 'GET', credentials: 'include' })
   // Response may be raw string or object; normalize
   const type = res.headers.get('content-type') || ''
   if (type.includes('application/json')) {
