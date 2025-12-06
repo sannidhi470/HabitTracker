@@ -4,6 +4,7 @@ import com.habittracker.habitTracker.Auth.DTO.GetIdRequest;
 import com.habittracker.habitTracker.Auth.DTO.LoginRequest;
 import com.habittracker.habitTracker.Auth.Model.User;
 import com.habittracker.habitTracker.Auth.Service.remebberMeService;
+import com.habittracker.habitTracker.Auth.Service.sessionService;
 import com.habittracker.habitTracker.Auth.Service.userService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,6 +32,9 @@ public class userController {
 
     @Autowired
     private remebberMeService remebberMeService;
+
+    @Autowired
+    private sessionService sessionService;
 
     @PostMapping("/google")
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) {
@@ -101,6 +105,21 @@ public class userController {
                         .build();
                 response.addHeader("Set-Cookie", cookie.toString());
             }
+            else {
+                String token = UUID.randomUUID().toString();
+                String tokenHash = HashUtil.sha256Hex(token);
+                sessionService.saveToken(user.getId(), tokenHash);
+
+                // Session cookie = no maxAge set
+                ResponseCookie cookie = ResponseCookie.from("session_token", token)
+                        .httpOnly(true)
+                        .secure(false) // use false on HTTP dev; set true in HTTPS prod
+                        .path("/")
+                        .sameSite("Lax")
+                        .build();
+
+                response.addHeader("Set-Cookie", cookie.toString());
+            }
             return ResponseEntity.status(HttpStatus.OK).build();
         }
         catch(RuntimeException e){
@@ -144,11 +163,16 @@ public class userController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         String rawToken = null;
+        String sessionRaw = null;
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie c : cookies) {
                 if ("remember_me".equals(c.getName())) {
                     rawToken = c.getValue();
+                    break;
+                }
+                if ("session_token".equals(c.getName())) {
+                    sessionRaw = c.getValue();
                     break;
                 }
             }
@@ -159,8 +183,21 @@ public class userController {
                 String hash = HashUtil.sha256Hex(rawToken);
                 remebberMeService.deleteByTokenHash(hash);
             }
+            if(sessionRaw != null && !sessionRaw.isBlank()) {
+                String hash = HashUtil.sha256Hex(sessionRaw);
+                sessionService.deleteByTokenHash(hash);
+            }
         } catch (Exception ignored) {
         }
+
+        ResponseCookie clearedSession = ResponseCookie.from("session_token", "")
+                .httpOnly(true)
+                .secure(false) // same note as above
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        response.addHeader("Set-Cookie", clearedSession.toString());
 
         // Clear cookie (note: for HTTP localhost dev, use .secure(false))
         ResponseCookie cleared = ResponseCookie.from("remember_me", "")

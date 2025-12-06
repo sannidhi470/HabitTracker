@@ -27,6 +27,9 @@ public class RememberMeFilter extends OncePerRequestFilter {
     @Autowired
     private userService userService;
 
+    @Autowired
+    private sessionService sessionService;
+
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
@@ -53,10 +56,27 @@ public class RememberMeFilter extends OncePerRequestFilter {
                             SecurityContextHolder.getContext().setAuthentication(auth);
                         }
                     }
+                    if ("session_token".equals(c.getName())) {
+                        String raw = c.getValue();
+                        String hash = HashUtil.sha256Hex(raw);
+
+                        var opt = sessionService.findByTokenHash(hash);
+
+                        if (opt.isPresent() &&
+                                opt.get().getExpiresAt().isAfter(LocalDateTime.now())) {
+
+                            User u = userService.getUserById(opt.get().getUserId());
+
+                            UsernamePasswordAuthenticationToken auth =
+                                    new UsernamePasswordAuthenticationToken(u, null, new ArrayList<>());
+
+                            SecurityContextHolder.getContext().setAuthentication(auth);
+                        }
+                    }
                 }
             }
-        }
 
-        chain.doFilter(request, response);
+            chain.doFilter(request, response);
+        }
     }
 }
