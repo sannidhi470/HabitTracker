@@ -142,11 +142,7 @@ export default function Auth() {
   // Handlers
   const onForgot = (e) => {
     e.preventDefault()
-    showToast({
-      title: 'Reset password',
-      body: 'Wire this to your backend or email provider.',
-      type: 'default',
-    })
+    navigate('/forgot-password')
   }
 
   const onLoginSubmit = async (e) => {

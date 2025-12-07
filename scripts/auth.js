@@ -193,6 +193,13 @@
         input.setAttribute("type", isPwd ? "text" : "password");
         btn.textContent = isPwd ? "Hide" : "Show";
         btn.setAttribute("aria-label", isPwd ? "Hide password" : "Show password");
+        // Adjust placeholder so users don't still see dots when showing
+        if (isPwd) {
+          input.setAttribute("placeholder", "Password");
+        } else {
+          const fallback = targetId === "login-password" ? "••••••••" : "At least 8 characters";
+          input.setAttribute("placeholder", fallback);
+        }
       });
     });
   }
@@ -242,17 +249,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        let response;
-        try {
-          response = await doRequest("http://localhost:8081/api/user/login");
-        } catch (err1) {
-          try {
-            response = await doRequest("http://127.0.0.1:8081/api/user/login");
-          } catch (err2) {
-            console.error("Login request failed", err1, err2);
-            throw err2;
-          }
-        }
+        const response = await doRequest("http://localhost:8081/api/user/login");
         if (response.status === 200) {
           if (msg) msg.textContent = "Logged in successfully";
         } else if (response.status === 400) {
@@ -346,17 +343,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        let response;
-        try {
-          response = await doRequest("http://localhost:8081/api/signup");
-        } catch (err1) {
-          try {
-            response = await doRequest("http://127.0.0.1:8081/api/signup");
-          } catch (err2) {
-            console.error("Signup request failed", err1, err2);
-            throw err2;
-          }
-        }
+        const response = await doRequest("http://localhost:8081/api/signup");
         if (response.status === 200 || response.status === 201) {
           if (msg) msg.textContent = "User registered successfully";
         } else if (response.status === 400) {

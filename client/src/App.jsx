@@ -4,6 +4,8 @@ import { getMe } from './services/auth.js'
 import Auth from './pages/Auth.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Selection from './pages/Selection.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 import Reading from './pages/Reading.jsx'
 import Meditation from './pages/Meditation.jsx'
 import Workout from './pages/Workout.jsx'
@@ -38,6 +40,8 @@ function App() {
     <Routes>
       <Route path="/" element={<BootRedirect />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/selection" element={<Selection />} />
       <Route path="/custom-habit" element={<CustomHabit />} />
       <Route path="/ai-suggest" element={<AIHabitSuggest />} />

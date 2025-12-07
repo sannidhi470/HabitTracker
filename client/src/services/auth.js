@@ -98,6 +98,26 @@ export async function signupRequest({ fullName, email, password }) {
   return postWithFallback('/api/user/signup', { fullName, email, password })
 }
 
+export async function requestPasswordReset(email) {
+  const u = `${API_ORIGIN}/api/auth/forgot-password`
+  return fetch(u, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+}
+
+export async function resetPassword({ token, newPassword }) {
+  const u = `${API_ORIGIN}/api/auth/reset-password`
+  return fetch(u, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, newPassword }),
+  })
+}
+
 export async function startOAuth(provider) {
   showToast({
     title: `OAuth: ${provider}`,
