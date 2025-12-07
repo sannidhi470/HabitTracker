@@ -1,6 +1,6 @@
 package com.habittracker.habitTracker.Auth.Controller;
 
-import com.habittracker.habitTracker.Auth.Service.emailService;
+import com.habittracker.habitTracker.Auth.Service.EmailService;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
@@ -10,12 +10,14 @@ import org.testng.annotations.Test;
 public class emailServiceTest extends AbstractTestNGSpringContextTests {
 
     @Autowired
-    private emailService emailS;
+    private EmailService emailS;
 
     @Test
     public void testSendEmail() {
-        emailS.sendResetEmail("sannidhishetty9@gmail.com", "http://localhost:5173/reset?token=TEST");
+        emailS.sendResetEmail(
+                "sannidhishetty9@gmail.com",
+                "http://localhost:5173/reset?token=TEST"
+        );
         System.out.println("✅ Test executed");
     }
 }
-
