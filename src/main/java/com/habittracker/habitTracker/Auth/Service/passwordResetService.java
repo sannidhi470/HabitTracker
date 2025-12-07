@@ -5,6 +5,7 @@ import com.habittracker.habitTracker.Auth.Model.User;
 import com.habittracker.habitTracker.Auth.Model.passwordResetToken;
 import com.habittracker.habitTracker.Auth.repository.resetPasswordTokenRepo;
 import com.habittracker.habitTracker.Auth.repository.userRepo;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,6 +17,7 @@ import java.util.HexFormat;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class passwordResetService {
 
     @Value("${app.url:http://localhost:5173}")
@@ -74,7 +76,7 @@ public class passwordResetService {
         if (newPassword == null || newPassword.length() < 8) throw new RuntimeException("Password too short"); // ADD THE PROPER VALIDAION HERE
         String tokenHash = HashUtil.sha256Hex(rawToken);
         passwordResetToken prt = resetPasswordTokenRepo.findByTokenHash(tokenHash)
-                .orElseThrow(() -> new RuntimeException("Invalid or expired token"));
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
         if (prt.getUsedAt() != null || prt.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Invalid or expired token");
         }

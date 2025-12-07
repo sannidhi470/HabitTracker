@@ -36,7 +36,7 @@ public class passwordResetController {
         try {
             if (resetPasswordRequest == null || resetPasswordRequest.getNewPassword() == null || resetPasswordRequest.getToken() == null)
                 return ResponseEntity.badRequest().body("Invalid payload");
-            passwordResetService.resetPassword(resetPasswordRequest.getNewPassword(), resetPasswordRequest.getToken());
+            passwordResetService.resetPassword(resetPasswordRequest.getToken(),resetPasswordRequest.getNewPassword());
             return ResponseEntity.ok("Password has been reset.");
         }catch (Exception e){
             return ResponseEntity.badRequest().body(e.getMessage());
