@@ -90,13 +90,14 @@ public class userController {
     @PostMapping("/login")
     public ResponseEntity<Void> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
         try{
+            boolean prod = true;
             User user=userService.login(loginRequest.getEmail(), loginRequest.getPassword());
             if(loginRequest.isRememberMe())
             {
                 String token= UUID.randomUUID().toString();
                 String tokenHash = HashUtil.sha256Hex(token);
                 remebberMeService.saveToken(user.getId(), tokenHash);
-                boolean prod = true;
+
                 ResponseCookie cookie = ResponseCookie.from("remember_me", token)
                         .httpOnly(true)
                         .secure(prod)
@@ -114,9 +115,9 @@ public class userController {
                 // Session cookie = no maxAge set
                 ResponseCookie cookie = ResponseCookie.from("session_token", token)
                         .httpOnly(true)
-                        .secure(false) // use false on HTTP dev; set true in HTTPS prod
+                        .secure(prod) // use false on HTTP dev; set true in HTTPS prod
                         .path("/")
-                        .sameSite("Lax")
+                        .sameSite(prod ? "None" : "Lax")
                         .build();
 
                 response.addHeader("Set-Cookie", cookie.toString());
@@ -203,10 +204,10 @@ public class userController {
         // Clear cookie (note: for HTTP localhost dev, use .secure(false))
         ResponseCookie cleared = ResponseCookie.from("remember_me", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(prod)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite(prod ? "None" : "Lax")
                 .build();
         response.addHeader("Set-Cookie", cleared.toString());
 
