@@ -2,6 +2,8 @@ package com.habittracker.habitTracker.userPlanProgress.Controller;
 
 import com.habittracker.habitTracker.userPlanProgress.DTO.addProgressBody;
 import com.habittracker.habitTracker.userPlanProgress.DTO.latestBody;
+import com.habittracker.habitTracker.userPlanProgress.DTO.streakRequest;
+import com.habittracker.habitTracker.userPlanProgress.DTO.streakResponse;
 import com.habittracker.habitTracker.userPlanProgress.Model.planProgress;
 import com.habittracker.habitTracker.userPlanProgress.Service.planProgressService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +77,17 @@ public class planProgressController {
             planProgressService.deleteProgress(latestBody.getUserId(), latestBody.getHabitId());
             return ResponseEntity.ok().build();
 
+    }
+
+    @PostMapping("/streak")
+    public ResponseEntity<?> streak(@RequestBody streakRequest req) {
+        try{
+            streakResponse response = planProgressService.getStreak(req.getUserId(),req.getHabitId(),req.getReferenceDate());
+            return ResponseEntity.ok().body(response);
+        }
+        catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
 

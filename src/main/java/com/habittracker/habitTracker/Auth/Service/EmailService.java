@@ -24,16 +24,16 @@ public class EmailService {
         System.out.println("✅ Reset email sent to: " + to);
     }
 
-//    public void sendPasswordChangedEmail(String to)
-//    {
-//        SimpleMailMessage message = new SimpleMailMessage();
-////        message.setFrom(from);
-//        message.setTo(to);
-//        message.setSubject("Your Habit Tracker password was changed");
-//        message.setText(
-//                "Your password was just changed. If this wasn't you, please contact support immediately."
-//        );
-//        mailSender.send(message);
-//    }
+    public void sendPasswordChangedEmail(String to)
+    {
+        SimpleMailMessage message = new SimpleMailMessage();
+       message.setFrom("sannidhi.shetty16@gmail.com");
+        message.setTo(to);
+        message.setSubject("Your Habit Tracker password was changed");
+        message.setText(
+                "Your password was just changed. If this wasn't you, please contact support immediately."
+        );
+        mailSender.send(message);
+    }
 
 }

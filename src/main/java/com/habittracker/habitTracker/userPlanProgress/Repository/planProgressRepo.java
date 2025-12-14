@@ -15,5 +15,5 @@ public interface planProgressRepo extends JpaRepository<planProgress, Long> {
     List<planProgress> findByUserId(long userId);
     List<planProgress> findByUserIdAndHabitHabitIdOrderByTimestampDesc(Long userId, Long habitId);
     Optional<planProgress> findTopByUserIdAndHabitHabitIdAndTimestampOrderByIdDesc(Long userId, Long habitId, LocalDate timestamp);
-
+    List<planProgress> findByUserIdAndHabitHabitIdAndTimestampBetweenOrderByTimestampAsc(Long userId, Long habitId, LocalDate start, LocalDate end);
 }

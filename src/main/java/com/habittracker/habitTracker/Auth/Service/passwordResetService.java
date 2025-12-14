@@ -83,7 +83,7 @@ public class passwordResetService {
         User user = userRepo.findById(prt.getUserId()).orElseThrow(() -> new RuntimeException("User not found"));
         user.setPassword(bCryptPasswordEncoder.encode(newPassword));
         userRepo.save(user);
-//        emailService.sendPasswordChangedEmail(user.getEmail());
+        emailService.sendPasswordChangedEmail(user.getEmail());
         resetPasswordTokenRepo.deleteAllByUserId(user.getId());
         remebberMeService.deleteAllForUser(user.getId());
     }
