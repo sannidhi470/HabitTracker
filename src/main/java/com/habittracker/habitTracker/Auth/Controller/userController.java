@@ -96,12 +96,13 @@ public class userController {
                 String token= UUID.randomUUID().toString();
                 String tokenHash = HashUtil.sha256Hex(token);
                 remebberMeService.saveToken(user.getId(), tokenHash);
+                boolean prod = true;
                 ResponseCookie cookie = ResponseCookie.from("remember_me", token)
                         .httpOnly(true)
-                        .secure(false)
+                        .secure(prod)
                         .path("/")
                         .maxAge(60 * 60 * 24 * 30)   // 30 days
-                        .sameSite("Lax")
+                        .sameSite(prod ? "None" : "Lax")
                         .build();
                 response.addHeader("Set-Cookie", cookie.toString());
             }
@@ -189,13 +190,13 @@ public class userController {
             }
         } catch (Exception ignored) {
         }
-
+        boolean prod=true;
         ResponseCookie clearedSession = ResponseCookie.from("session_token", "")
                 .httpOnly(true)
-                .secure(false) // same note as above
+                .secure(prod) // same note as above
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite(prod ? "None" : "Lax")
                 .build();
         response.addHeader("Set-Cookie", clearedSession.toString());
 
