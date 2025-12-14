@@ -2,8 +2,8 @@
 .selection-page {
   --text: #1f2937;
   --muted: #475569;
-  --card: #311704; /* card background set to brand brown */
-  --card-hover: #5a2a08; /* slightly lighter/darker variant for hover */
+  --card: #eed1bc; /* base card background */
+  --card-hover: #eed1bc; /* same color on hover; hover still changes border/shadow */
   --border: rgba(0, 0, 0, 0.12);
   --ring: rgba(31, 41, 55, 0.18);
   --shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
@@ -27,9 +27,9 @@
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(to bottom right, rgba(255, 255, 255, 0.70), rgba(255, 255, 255, 0.70)),
+    linear-gradient(to bottom right, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
     var(--bg-image) center/cover no-repeat,
-    #f6f3ef;
+    #0b1220;
 }
 
 .selection-header {
@@ -95,7 +95,7 @@
   appearance: none;
   border: 1px solid var(--border);
   background: var(--card);
-  color: #ffffff; /* ensure readable text on brown card */
+  color: var(--text);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   cursor: pointer;
@@ -183,8 +183,8 @@
   .selection-page {
     --text: #e2e8f0;
     --muted: #94a3b8;
-    --card: #311704; /* keep brown in dark mode */
-    --card-hover: #4a2206;
+    --card: #eed1bc; /* keep same light card color in dark mode */
+    --card-hover: #eed1bc;
     --border: rgba(255, 255, 255, 0.12);
     --ring: rgba(99, 102, 241, 0.35);
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
@@ -201,8 +201,8 @@
 [data-theme="dark"] .selection-page {
   --text: #e2e8f0;
   --muted: #94a3b8;
-  --card: #311704; /* keep brown when manually toggled dark */
-  --card-hover: #4a2206;
+  --card: #eed1bc;
+  --card-hover: #eed1bc;
   --border: rgba(255, 255, 255, 0.12);
   --ring: rgba(99, 102, 241, 0.45);
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
@@ -221,7 +221,7 @@
   justify-content: center;
   gap: 12px;
   margin-top: 4px;
-  padding: 4px 8px 20px;
+  padding: 4px 8px 4px;
 }
 .aux-link-btn {
   appearance: none;
@@ -229,8 +229,9 @@
   border: none;
   color: var(--brand-brown);
   font-weight: 700;
+  font-size: 16px;
   cursor: pointer;
-  padding: 6px 8px;
+  padding: 10px 14px;
   border-radius: 10px;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -247,8 +248,57 @@
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand-brown), white 80%), var(--shadow);
 }
 .aux-separator {
-  color: var(--muted);
-  font-weight: 600;
+  color: var(--brand-brown);
+  font-weight: 700;
+}
+
+.selection-aux-ideas {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  padding: 0 8px 20px;
+}
+.idea-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.idea-chip {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card), white 16%);
+  color: var(--brand-brown);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+}
+.idea-chip:hover {
+  background: color-mix(in srgb, var(--brand-brown), white 90%);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-brown), white 82%), var(--shadow);
+}
+.idea-chip:active {
+  transform: translateY(1px);
+}
+.idea-chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand-brown), white 80%), var(--shadow);
+}
+
+/* Keep header logout button using the original brown style, independent of card color */
+.selection-header .btn:not(.primary) {
+  background: #311704;
+  color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+.selection-header .btn:not(.primary):hover {
+  background: #5a2a08;
+  box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.12), var(--shadow);
+}
+.selection-header .btn:not(.primary):active {
+  transform: translateY(1px);
 }
 
 

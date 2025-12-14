@@ -9,10 +9,13 @@ function slugify(input) {
 }
 
 function colorFromName(name) {
-  const palette = ['#f97316', '#0ea5e9', '#10b981', '#e11d48', '#a855f7', '#22c55e', '#fb923c']
-  let h = 0
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
-  return palette[h % palette.length]
+  // We previously varied accent colors per habit name using a palette.
+  // For a more consistent visual identity, always use the brand accent
+  // color that matches the Reading card highlight.
+  //
+  // Keeping this function so callers don't need to change, but it now
+  // returns a single, consistent color.
+  return '#f97316'
 }
 
 function getCacheKey(userId, name) {

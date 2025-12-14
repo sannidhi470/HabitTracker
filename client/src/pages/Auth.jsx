@@ -3,8 +3,6 @@ import '../styles/auth.css'
 import { useNavigate } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
 import {
-  initThemeFromStorage,
-  setTheme as applyTheme,
   validateEmail,
   passwordStrength,
   loginRequest,
@@ -18,13 +16,7 @@ import { saveUserEmail, saveUserId, saveUserEmailSession, saveUserIdSession } fr
 import { getUserIdByEmail, getUserHabits } from '../services/api.js'
 
 export default function Auth() {
-  // Theme
-  const [theme, setTheme] = useState(null)
   const navigate = useNavigate()
-  useEffect(() => {
-    const initial = initThemeFromStorage()
-    setTheme(initial)
-  }, [])
   // If already authenticated via remember-me, skip this page
   useEffect(() => {
     let mounted = true
@@ -39,13 +31,6 @@ export default function Auth() {
     })()
     return () => { mounted = false }
   }, [navigate])
-  const onToggleTheme = () => {
-    const current = document.documentElement.getAttribute('data-theme')
-    const next = current === 'dark' ? 'light' : 'dark'
-    applyTheme(next)
-    setTheme(next)
-  }
-
   // Tabs
   const getHashTab = () => {
     const h = (location.hash || '').replace('#', '')
@@ -219,19 +204,6 @@ export default function Auth() {
         <div className="brand">
           <span className="brand-text">Habit Tracker</span>
         </div>
-        <button
-          id="theme-toggle"
-          className="icon-btn"
-          type="button"
-          aria-pressed={String(theme === 'dark')}
-          aria-label="Toggle dark mode"
-          title="Toggle theme"
-          onClick={onToggleTheme}
-        >
-          <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
-          </svg>
-        </button>
       </header>
 
       <main className="center-wrap">

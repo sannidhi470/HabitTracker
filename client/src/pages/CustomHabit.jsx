@@ -1,29 +1,21 @@
 import '../styles/custom.css'
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { initThemeFromStorage, setTheme as applyTheme, showToast } from '../services/auth.js'
+import { useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { showToast } from '../services/auth.js'
 import { getUserEmail, getUserId, saveUserId } from '../services/session.js'
 import { addHabit, addHabitToUser, getHabitIdByName, getUserIdByEmail } from '../services/api.js'
 import { resolveCustomHabitImage, computeAccent } from '../services/images.js'
 
 export default function CustomHabit() {
-  const [theme, setTheme] = useState(null)
-  const [name, setName] = useState('')
-  const [unit, setUnit] = useState('')
+  const location = useLocation()
+  const template = location?.state?.template || {}
+  const initialName = String(template.name || '').trim()
+  const initialUnit = String(template.unit || '').trim()
+
+  const [name, setName] = useState(initialName)
+  const [unit, setUnit] = useState(initialUnit)
   const [busy, setBusy] = useState(false)
   const navigate = useNavigate()
-
-  useEffect(() => {
-    const initial = initThemeFromStorage()
-    setTheme(initial)
-  }, [])
-
-  const onToggleTheme = () => {
-    const current = document.documentElement.getAttribute('data-theme')
-    const next = current === 'dark' ? 'light' : 'dark'
-    applyTheme(next)
-    setTheme(next)
-  }
 
   const ensureUserId = async () => {
     let uid = getUserId()
@@ -97,21 +89,6 @@ export default function CustomHabit() {
         <div className="custom-brand">
           <span className="custom-brand-text">Habit Tracker</span>
         </div>
-        <div style={{ display: 'grid', gridAutoFlow: 'column', gap: 8, justifySelf: 'end' }}>
-          <button
-            id="theme-toggle"
-            className="icon-btn custom-theme-toggle"
-            type="button"
-            aria-pressed={String(theme === 'dark')}
-            aria-label="Toggle dark mode"
-            title="Toggle theme"
-            onClick={onToggleTheme}
-          >
-            <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
-            </svg>
-          </button>
-        </div>
       </header>
 
       <main className="custom-main">
@@ -121,41 +98,52 @@ export default function CustomHabit() {
         </section>
 
         <section className="custom-form" aria-label="Custom habit form">
-          <label className="field">
-            <span className="field-label">Habit name</span>
-            <input
-              className="input"
-              type="text"
-              placeholder="e.g., Water Intake"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              aria-label="Habit name"
-            />
-          </label>
-          <label className="field">
-            <span className="field-label">Unit</span>
-            <input
-              className="input"
-              type="text"
-              placeholder="e.g., ml, minutes, reps"
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-              aria-label="Unit"
-            />
-          </label>
-          <div className="form-actions">
-            <button className="btn primary" type="button" disabled={busy} onClick={onCreate}>
-              {busy ? 'Creating…' : 'Create habit'}
-            </button>
-            <button className="btn linklike" type="button" onClick={() => navigate('/selection')}>
-              Go back to Selection Page
-            </button>
-          </div>
+          <h2 className="plan-title">Plan setup</h2>
+          <form
+            className="custom-plan-form"
+            onSubmit={(e) => {
+              e.preventDefault()
+              onCreate()
+            }}
+          >
+            <div className="grid">
+              <div className="field">
+                <label className="label" htmlFor="habitName">Habit name</label>
+                <input
+                  id="habitName"
+                  className="input"
+                  type="text"
+                  placeholder="e.g., Water Intake"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  aria-label="Habit name"
+                />
+              </div>
+              <div className="field">
+                <label className="label" htmlFor="habitUnit">Unit</label>
+                <input
+                  id="habitUnit"
+                  className="input"
+                  type="text"
+                  placeholder="e.g., ml, minutes, reps"
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  aria-label="Unit"
+                />
+              </div>
+            </div>
+            <div className="actions">
+              <button className="btn primary" type="submit" disabled={busy}>
+                {busy ? 'Creating…' : 'Create habit'}
+              </button>
+              <button className="btn linklike" type="button" onClick={() => navigate('/selection')}>
+                Go back to Selection Page
+              </button>
+            </div>
+          </form>
         </section>
       </main>
       <div id="toast-container" className="toast-container" aria-live="polite" aria-atomic="true"></div>
     </div>
   )
 }
-
-

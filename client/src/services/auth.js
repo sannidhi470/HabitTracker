@@ -1,27 +1,17 @@
 import { API_ORIGIN } from './api'
 
+// Theme helpers kept as no-ops so existing imports keep working,
+// but they no longer change any colors/backgrounds.
 export const themeKey = 'habit-theme'
 
-export function setTheme(theme) {
-  if (theme === 'dark' || theme === 'light') {
-    document.documentElement.setAttribute('data-theme', theme)
-    try { localStorage.setItem(themeKey, theme) } catch (_) {}
-  } else {
-    document.documentElement.removeAttribute('data-theme')
-    try { localStorage.removeItem(themeKey) } catch (_) {}
-  }
-  const btn = document.querySelector('#theme-toggle')
-  if (btn) btn.setAttribute('aria-pressed', String(theme === 'dark'))
+export function setTheme(_theme) {
+  // Intentionally do nothing – dark/light theme is disabled.
+  try { localStorage.removeItem(themeKey) } catch (_) {}
 }
 
 export function initThemeFromStorage() {
-  let stored = null
-  try { stored = localStorage.getItem(themeKey) } catch (_) {}
-  if (stored === 'dark' || stored === 'light') {
-    setTheme(stored)
-    return stored
-  }
-  setTheme(null)
+  // No persisted theme; always return null.
+  try { localStorage.removeItem(themeKey) } catch (_) {}
   return null
 }
 

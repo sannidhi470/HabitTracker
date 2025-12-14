@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import '../styles/auth.css'
-import { initThemeFromStorage, setTheme as applyTheme, showToast, resetPassword as resetPasswordRequest } from '../services/auth.js'
+import { showToast, resetPassword as resetPasswordRequest } from '../services/auth.js'
 
 export default function ResetPassword() {
-  const [theme, setTheme] = useState(null)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passErr, setPassErr] = useState('')
@@ -15,18 +14,6 @@ export default function ResetPassword() {
   const navigate = useNavigate()
 
   const token = searchParams.get('token') || ''
-
-  useEffect(() => {
-    const initial = initThemeFromStorage()
-    setTheme(initial)
-  }, [])
-
-  const onToggleTheme = () => {
-    const current = document.documentElement.getAttribute('data-theme')
-    const next = current === 'dark' ? 'light' : 'dark'
-    applyTheme(next)
-    setTheme(next)
-  }
 
   useEffect(() => {
     if (!password) {
@@ -138,19 +125,6 @@ export default function ResetPassword() {
         <div className="brand">
           <span className="brand-text">Habit Tracker</span>
         </div>
-        <button
-          id="theme-toggle"
-          className="icon-btn"
-          type="button"
-          aria-pressed={String(theme === 'dark')}
-          aria-label="Toggle dark mode"
-          title="Toggle theme"
-          onClick={onToggleTheme}
-        >
-          <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
-          </svg>
-        </button>
       </header>
 
       <main className="center-wrap">
@@ -212,13 +186,19 @@ export default function ResetPassword() {
             <div className="form-msg" aria-live="polite">{msg}</div>
           </form>
 
-          <button
-            className="btn ghost"
-            type="button"
-            onClick={() => navigate('/auth#login')}
-          >
-            Back to login
-          </button>
+          <div className="divider" role="separator" aria-label="Back">
+            <span>or</span>
+          </div>
+
+          <div className="actions">
+            <button
+              className="btn ghost"
+              type="button"
+              onClick={() => navigate('/auth#login')}
+            >
+              Back to login
+            </button>
+          </div>
         </section>
       </main>
 

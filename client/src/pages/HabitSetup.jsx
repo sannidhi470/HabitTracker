@@ -1,12 +1,129 @@
 import '../styles/habit-setup.css'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { initThemeFromStorage, setTheme as applyTheme, showToast, logoutRequest } from '../services/auth.js'
+import { showToast, logoutRequest } from '../services/auth.js'
 import { getHabitIdByName, getUserIdByEmail, addPlan, getPlan, getUserHabits, getHabitUnit } from '../services/api.js'
 import { getUserEmail, saveHabitId, saveUserId, clearSession } from '../services/session.js'
 
 function pad2(n) {
   return String(n).padStart(2, '0')
+}
+function toIso(y, m, d) {
+  // m is 0-based
+  const dt = new Date(Date.UTC(y, m, d))
+  return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`
+}
+function parseIso(iso) {
+  const [y, m, d] = iso.split('-').map((x) => Number(x))
+  return new Date(Date.UTC(y, m - 1, d))
+}
+function formatDisplay(iso) {
+  if (!iso) return ''
+  const d = parseIso(iso)
+  return `${pad2(d.getUTCDate())}/${pad2(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`
+}
+function daysInMonth(year, monthIndex0) {
+  return new Date(Date.UTC(year, monthIndex0 + 1, 0)).getUTCDate()
+}
+function startWeekday(year, monthIndex0) {
+  return new Date(Date.UTC(year, monthIndex0, 1)).getUTCDay() // 0..6
+}
+
+function BrownDatePicker({ id, label, value, onChange, min }) {
+  const selected = value ? parseIso(value) : null
+  const today = new Date()
+  const [open, setOpen] = useState(false)
+  const [viewYear, setViewYear] = useState(selected ? selected.getUTCFullYear() : today.getUTCFullYear())
+  const [viewMonth, setViewMonth] = useState(selected ? selected.getUTCMonth() : today.getUTCMonth()) // 0..11
+
+  const isDisabled = (y, m, d) => {
+    if (!min) return false
+    const minD = parseIso(min)
+    const cur = new Date(Date.UTC(y, m, d))
+    return cur.getTime() < minD.getTime()
+  }
+
+  const gotoMonth = (delta) => {
+    let y = viewYear
+    let m = viewMonth + delta
+    if (m < 0) { m = 11; y -= 1 }
+    if (m > 11) { m = 0; y += 1 }
+    setViewYear(y); setViewMonth(m)
+  }
+  const onSelect = (d) => {
+    const iso = toIso(viewYear, viewMonth, d)
+    if (isDisabled(viewYear, viewMonth, d)) return
+    onChange(iso)
+    setOpen(false)
+  }
+
+  const totalDays = daysInMonth(viewYear, viewMonth)
+  const start = startWeekday(viewYear, viewMonth) // 0=Sun..6
+  const cells = []
+  for (let i = 0; i < start; i++) cells.push(null)
+  for (let d = 1; d <= totalDays; d++) cells.push(d)
+
+  const isToday = (d) => {
+    return today.getUTCFullYear() === viewYear && today.getUTCMonth() === viewMonth && today.getUTCDate() === d
+  }
+  const isSelected = (d) => {
+    return selected &&
+      selected.getUTCFullYear() === viewYear &&
+      selected.getUTCMonth() === viewMonth &&
+      selected.getUTCDate() === d
+  }
+
+  return (
+    <div className="date-field">
+      {label ? <label className="label" htmlFor={id}>{label}</label> : null}
+      <button
+        id={id}
+        type="button"
+        className="input date-trigger"
+        aria-haspopup="dialog"
+        aria-expanded={open ? 'true' : 'false'}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {formatDisplay(value)}
+      </button>
+      {open && (
+        <div className="calendar" role="dialog" aria-modal="false">
+          <div className="cal-header">
+            <button className="cal-nav" type="button" onClick={() => gotoMonth(-1)} aria-label="Previous month">‹</button>
+            <div className="cal-title">
+              {new Date(Date.UTC(viewYear, viewMonth, 1)).toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })}
+            </div>
+            <button className="cal-nav" type="button" onClick={() => gotoMonth(1)} aria-label="Next month">›</button>
+          </div>
+          <div className="cal-grid cal-weekdays" aria-hidden="true">
+            {['Su','Mo','Tu','We','Th','Fr','Sa'].map((w) => <div key={w} className="cal-weekday">{w}</div>)}
+          </div>
+          <div className="cal-grid">
+            {cells.map((d, i) => {
+              if (d === null) return <div key={`e${i}`} />
+              const disabled = isDisabled(viewYear, viewMonth, d)
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  className={
+                    'cal-day' +
+                    (isToday(d) ? ' is-today' : '') +
+                    (isSelected(d) ? ' is-selected' : '') +
+                    (disabled ? ' is-disabled' : '')
+                  }
+                  onClick={() => onSelect(d)}
+                  disabled={disabled}
+                >
+                  {d}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 function todayIsoLocal() {
   const d = new Date()
@@ -42,7 +159,6 @@ function humanizeSlug(slug) {
 }
 
 export default function HabitSetup() {
-  const [theme, setTheme] = useState(null)
   const navigate = useNavigate()
   const params = useParams()
   const location = useLocation()
@@ -62,16 +178,6 @@ export default function HabitSetup() {
   const [targetEndDate, setTargetEndDate] = useState(todayIsoLocal())
   const [totalAmount, setTotalAmount] = useState(300)
 
-  useEffect(() => {
-    const initial = initThemeFromStorage()
-    setTheme(initial)
-  }, [])
-  const onToggleTheme = () => {
-    const current = document.documentElement.getAttribute('data-theme')
-    const next = current === 'dark' ? 'light' : 'dark'
-    applyTheme(next)
-    setTheme(next)
-  }
   const onLogout = () => {
     ;(async () => {
       try { await logoutRequest() } catch (_) {}
@@ -245,20 +351,7 @@ export default function HabitSetup() {
           <span className="habit-brand-text">Habit Tracker</span>
         </div>
         <div style={{ display: 'grid', gridAutoFlow: 'column', gap: 8, justifySelf: 'end' }}>
-          <button
-            id="theme-toggle"
-            className="icon-btn habit-theme-toggle"
-            type="button"
-            aria-pressed={String(theme === 'dark')}
-            aria-label="Toggle dark mode"
-            title="Toggle theme"
-            onClick={onToggleTheme}
-          >
-            <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
-            </svg>
-          </button>
-          <button className="btn" type="button" onClick={onLogout}>Logout</button>
+          <button className="btn primary" type="button" onClick={onLogout}>Logout</button>
         </div>
       </header>
 
@@ -297,13 +390,11 @@ export default function HabitSetup() {
 
             <div className="grid">
               <div className="field">
-                <label className="label" htmlFor="startDate">Start date</label>
-                <input
+                <BrownDatePicker
                   id="startDate"
-                  className="input"
-                  type="date"
+                  label="Start date"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={setStartDate}
                 />
               </div>
 
@@ -352,13 +443,11 @@ export default function HabitSetup() {
               {planMode === 'DEADLINE' && (
                 <>
                   <div className="field">
-                    <label className="label" htmlFor="targetEndDate">Target end date</label>
-                    <input
+                    <BrownDatePicker
                       id="targetEndDate"
-                      className="input"
-                      type="date"
+                      label="Target end date"
                       value={targetEndDate}
-                      onChange={(e) => setTargetEndDate(e.target.value)}
+                      onChange={setTargetEndDate}
                       min={startDate}
                     />
                   </div>

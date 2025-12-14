@@ -336,4 +336,22 @@ export async function getHabitUnit(habitId) {
   }
 }
 
+export async function getStreak({ userId, habitId, referenceDate }) {
+  const ymd = (() => {
+    if (typeof referenceDate === 'string' && referenceDate.trim()) {
+      return referenceDate.slice(0, 10)
+    }
+    return todayLocalYmd()
+  })()
+  console.debug('[API] getStreak start', { userId, habitId, referenceDate: ymd })
+  const res = await fetchWithFallback('/api/progress/streak', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, habitId, referenceDate: ymd }),
+  })
+  const data = await parseJsonResponse(res)
+  console.debug('[API] getStreak success', { status: res.status, data })
+  return data
+}
 

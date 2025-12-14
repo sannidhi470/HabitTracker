@@ -1,7 +1,7 @@
 import '../styles/selection.css'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { initThemeFromStorage, setTheme as applyTheme, logoutRequest } from '../services/auth.js'
+import { logoutRequest } from '../services/auth.js'
 import { clearSession, getUserId, getUserEmail, saveUserId } from '../services/session.js'
 import { getUserIdByEmail, getUserHabits, hasPlansForUser } from '../services/api.js'
 import { resolveCustomHabitImage, computeAccent } from '../services/images.js'
@@ -11,15 +11,12 @@ import workoutImg from '../assets/backgrounds/workout.jpg'
 import journalingImg from '../assets/backgrounds/journal-16.jpg'
 
 export default function Selection() {
-  // Theme init and toggle (reuses the same helpers as Auth page)
-  const [theme, setTheme] = useState(null)
   const [cards, setCards] = useState([])
   const [hasAnyPlans, setHasAnyPlans] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+
   useEffect(() => {
-    const initial = initThemeFromStorage()
-    setTheme(initial)
     const load = async () => {
       // Built-ins
       const builtin = [
@@ -110,12 +107,7 @@ export default function Selection() {
     }
     load()
   }, [])
-  const onToggleTheme = () => {
-    const current = document.documentElement.getAttribute('data-theme')
-    const next = current === 'dark' ? 'light' : 'dark'
-    applyTheme(next)
-    setTheme(next)
-  }
+
   const onLogout = () => {
     ;(async () => {
       try { await logoutRequest() } catch (_) {}
@@ -137,6 +129,14 @@ export default function Selection() {
     }
   }, [navigate])
 
+  const quickIdeas = [
+    { name: 'Water Intake', unit: 'ml' },
+    { name: 'Daily Steps', unit: 'steps' },
+    { name: 'Sleep Time', unit: 'hours' },
+    { name: 'Stretching', unit: 'minutes' },
+    { name: 'Screen-Free Time', unit: 'minutes' },
+  ]
+
   return (
     <div className="selection-page">
       <header className="selection-header" aria-label="Header">
@@ -155,20 +155,7 @@ export default function Selection() {
               Go to Dashboard
             </button>
           )}
-          <button
-            id="theme-toggle"
-            className="icon-btn selection-theme-toggle"
-            type="button"
-            aria-pressed={String(theme === 'dark')}
-            aria-label="Toggle dark mode"
-            title="Toggle theme"
-            onClick={onToggleTheme}
-          >
-            <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
-            </svg>
-          </button>
-          <button className="btn" type="button" onClick={onLogout}>Logout</button>
+          <button className="btn primary" type="button" onClick={onLogout}>Logout</button>
         </div>
       </header>
 
@@ -198,17 +185,8 @@ export default function Selection() {
             </button>
           ))}
         </section>
-        
+
         <section className="selection-aux-actions" aria-label="More options">
-          <button
-            type="button"
-            className="aux-link-btn"
-            aria-label="Can't decide the habit?"
-            onClick={() => navigate('/ai-suggest')}
-          >
-            Can't decide the habit?
-          </button>
-          <span className="aux-separator">or</span>
           <button
             type="button"
             className="aux-link-btn"
@@ -218,9 +196,24 @@ export default function Selection() {
             Add a custom habit
           </button>
         </section>
+
+        <section className="selection-aux-ideas" aria-label="Quick habit ideas">
+          <span className="aux-separator">Or try one of these popular ideas:</span>
+          <div className="idea-chip-row">
+            {quickIdeas.map((idea) => (
+              <button
+                key={idea.name}
+                type="button"
+                className="idea-chip"
+                onClick={() => navigate('/custom-habit', { state: { template: idea } })}
+                aria-label={`Use idea: ${idea.name}`}
+              >
+                {idea.name}
+              </button>
+            ))}
+          </div>
+        </section>
       </main>
     </div>
   )
 }
-
-

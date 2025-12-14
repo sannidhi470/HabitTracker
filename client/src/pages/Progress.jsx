@@ -1,37 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/dashboard.css'
-import { initThemeFromStorage, setTheme as applyTheme, showToast } from '../services/auth.js'
+import { showToast } from '../services/auth.js'
 import { getUserEmail, getUserId, saveUserId } from '../services/session.js'
 import { clearSession } from '../services/session.js'
-import { getUserIdByEmail, getPlansByUserId, getHabitIdByName, getProgressRecords } from '../services/api.js'
+import { getUserIdByEmail, getPlansByUserId, getHabitIdByName, getProgressRecords, getStreak } from '../services/api.js'
 import ProgressChart from '../components/ProgressChart.jsx'
 import { computeAccent } from '../services/images.js'
 
 export default function Progress() {
-  const [theme, setTheme] = useState(null)
   const [currentUserId, setCurrentUserId] = useState(0)
   const [visibleHabits, setVisibleHabits] = useState([])
   const [habitIdsByKey, setHabitIdsByKey] = useState({})
   const [plansByKey, setPlansByKey] = useState({})
   const [rawByKey, setRawByKey] = useState({})
   const [busy, setBusy] = useState(false)
+  const [streakByKey, setStreakByKey] = useState({})
   const [period, setPeriod] = useState('week') // week | last7 | last30 | custom
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
 
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const initial = initThemeFromStorage()
-    setTheme(initial)
-  }, [])
-  const onToggleTheme = () => {
-    const current = document.documentElement.getAttribute('data-theme')
-    const next = current === 'dark' ? 'light' : 'dark'
-    applyTheme(next)
-    setTheme(next)
-  }
   const onLogout = () => {
     clearSession()
     navigate('/auth', { replace: true })
@@ -224,56 +214,38 @@ export default function Progress() {
     return String(plansByKey[key]?.habitUnit || plansByKey[key]?.unit || 'units')
   }
 
-  const computeStreakForRecords = (records, perDay) => {
-    try {
-      const target = Number(perDay) || 0
-      if (target <= 0) return 0
-      // Use latest entry per local day (not sum), to match "latest" semantics
-      const latestByYmd = new Map() // ymd -> { id: number, value: number }
-      for (const r of Array.isArray(records) ? records : []) {
-        const ymdRaw = String(r?.date || '').trim()
-        const v = Number(r?.logValue) || 0
-        const recId = Number(r?.id) || 0
-        if (!ymdRaw || !Number.isFinite(v) || v < 0) continue
-        const d = parseYmd(ymdRaw)
-        if (!d) continue
-        const ymd = toYmd(d)
-        const prev = latestByYmd.get(ymd)
-        if (!prev || recId > (prev.id || 0)) {
-          latestByYmd.set(ymd, { id: recId, value: v })
+  // Fetch streaks from backend for each visible habit when ids are known
+  useEffect(() => {
+    const uid = currentUserId
+    const keys = Object.keys(habitIdsByKey || {})
+    if (!Number.isFinite(uid) || uid <= 0 || keys.length === 0) return
+    const run = async () => {
+      try {
+        const pairs = await Promise.all(
+          keys.map(async (k) => {
+            const hid = habitIdsByKey[k]
+            if (!Number.isFinite(hid) || hid <= 0) return [k, 0]
+            try {
+              const res = await getStreak({ userId: uid, habitId: hid })
+              const current = Number(res?.currentStreak ?? 0)
+              return [k, Number.isFinite(current) && current > 0 ? current : 0]
+            } catch (err) {
+              console.error('[Progress] getStreak failed', { key: k, err })
+              return [k, 0]
+            }
+          })
+        )
+        const map = {}
+        for (const [k, v] of pairs) {
+          map[k] = v
         }
+        setStreakByKey(map)
+      } catch (err) {
+        console.error('[Progress] streak fetch loop failed', err)
       }
-      // Count back from today while meeting/exceeding target
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      let streak = 0
-      const cursor = new Date(today)
-      // Safety cap to avoid infinite loops
-      for (let i = 0; i < 366; i++) {
-        const ymd = toYmd(cursor)
-        const val = Number(latestByYmd.get(ymd)?.value || 0)
-        if (val >= target) {
-          streak += 1
-          cursor.setDate(cursor.getDate() - 1)
-          continue
-        }
-        break
-      }
-      return streak
-    } catch (err) {
-      console.error('[Progress] computeStreakForRecords failed', err)
-      return 0
     }
-  }
-
-  const streakByKey = useMemo(() => {
-    const out = {}
-    for (const k of Object.keys(rawByKey)) {
-      const per = Number(plansByKey[k]?.perDay) || 0
-      out[k] = computeStreakForRecords(rawByKey[k], per)
-    }
-    return out
-  }, [rawByKey, plansByKey])
+    run()
+  }, [currentUserId, habitIdsByKey])
 
   const rangeLabel = useMemo(() => {
     const toShort = (d) => {
@@ -291,20 +263,7 @@ export default function Progress() {
           <span className="dashboard-brand-text">Habit Tracker</span>
         </div>
         <div style={{ display: 'grid', gridAutoFlow: 'column', gap: 8, justifySelf: 'end' }}>
-          <button
-            id="theme-toggle"
-            className="icon-btn dashboard-theme-toggle"
-            type="button"
-            aria-pressed={String(theme === 'dark')}
-            aria-label="Toggle dark mode"
-            title="Toggle theme"
-            onClick={onToggleTheme}
-          >
-            <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
-            </svg>
-          </button>
-          <button className="btn" type="button" onClick={onLogout}>Logout</button>
+          <button className="btn primary" type="button" onClick={onLogout}>Logout</button>
         </div>
       </header>
 

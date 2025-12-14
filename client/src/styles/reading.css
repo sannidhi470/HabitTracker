@@ -176,7 +176,7 @@
 .hint {
   margin: 6px 0 0;
   font-size: 12px;
-  color: var(--on-welcome-muted);
+  color: var(--on-welcome); /* match plan type / label color */
 }
 .radio input {
   width: 16px;
@@ -188,7 +188,8 @@
   line-height: 1.1;
 }
 .actions {
-  display: grid;
+  display: flex;
+  justify-content: center; /* center the Save plan button */
 }
 .btn {
   appearance: none;

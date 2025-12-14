@@ -1,32 +1,19 @@
 import '../styles/custom.css'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { initThemeFromStorage, setTheme as applyTheme, showToast } from '../services/auth.js'
+import { showToast } from '../services/auth.js'
 import { getUserEmail, getUserId, saveUserId } from '../services/session.js'
 import { addHabit, addHabitToUser, getHabitIdByName, getUserIdByEmail } from '../services/api.js'
 import { resolveCustomHabitImage, computeAccent } from '../services/images.js'
 import { suggestHabits } from '../services/ai.js'
 
 export default function AIHabitSuggest() {
-  const [theme, setTheme] = useState(null)
   const [description, setDescription] = useState('')
   const [suggestions, setSuggestions] = useState([])
   const [selected, setSelected] = useState(new Set())
   const [loading, setLoading] = useState(false)
   const [adding, setAdding] = useState(false)
   const navigate = useNavigate()
-
-  useEffect(() => {
-    const initial = initThemeFromStorage()
-    setTheme(initial)
-  }, [])
-
-  const onToggleTheme = () => {
-    const current = document.documentElement.getAttribute('data-theme')
-    const next = current === 'dark' ? 'light' : 'dark'
-    applyTheme(next)
-    setTheme(next)
-  }
 
   const ensureUserId = async () => {
     let uid = getUserId()
@@ -127,21 +114,6 @@ export default function AIHabitSuggest() {
       <header className="custom-header" aria-label="Header">
         <div className="custom-brand">
           <span className="custom-brand-text">Habit Tracker</span>
-        </div>
-        <div style={{ display: 'grid', gridAutoFlow: 'column', gap: 8, justifySelf: 'end' }}>
-          <button
-            id="theme-toggle"
-            className="icon-btn custom-theme-toggle"
-            type="button"
-            aria-pressed={String(theme === 'dark')}
-            aria-label="Toggle dark mode"
-            title="Toggle theme"
-            onClick={onToggleTheme}
-          >
-            <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
-            </svg>
-          </button>
         </div>
       </header>
 

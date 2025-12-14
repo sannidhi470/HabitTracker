@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/journaling.css'
-import { initThemeFromStorage, setTheme as applyTheme, showToast, logoutRequest } from '../services/auth.js'
+import { showToast, logoutRequest } from '../services/auth.js'
 import { clearSession } from '../services/session.js'
 
 function pad2(n) {
@@ -126,19 +126,7 @@ function BrownDatePicker({ id, label, value, onChange, min }) {
 }
 
 export default function Journaling() {
-  // Theme init and toggle
-  const [theme, setTheme] = useState(null)
   const navigate = useNavigate()
-  useEffect(() => {
-    const initial = initThemeFromStorage()
-    setTheme(initial)
-  }, [])
-  const onToggleTheme = () => {
-    const current = document.documentElement.getAttribute('data-theme')
-    const next = current === 'dark' ? 'light' : 'dark'
-    applyTheme(next)
-    setTheme(next)
-  }
   const onLogout = () => {
     ;(async () => {
       try { await logoutRequest() } catch (_) {}
@@ -245,20 +233,7 @@ export default function Journaling() {
           <span className="journaling-brand-text">Habit Tracker</span>
         </div>
         <div style={{ display: 'grid', gridAutoFlow: 'column', gap: 8, justifySelf: 'end' }}>
-          <button
-            id="theme-toggle"
-            className="icon-btn journaling-theme-toggle"
-            type="button"
-            aria-pressed={String(theme === 'dark')}
-            aria-label="Toggle dark mode"
-            title="Toggle theme"
-            onClick={onToggleTheme}
-          >
-            <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
-            </svg>
-          </button>
-          <button className="btn" type="button" onClick={onLogout}>Logout</button>
+          <button className="btn primary" type="button" onClick={onLogout}>Logout</button>
         </div>
       </header>
 

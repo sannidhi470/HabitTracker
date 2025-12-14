@@ -2,16 +2,23 @@
 .habit-page {
   --text: #1f2937;
   --muted: #475569;
-  --card: #311704;
+  --card: #ffffff;
   --border: rgba(0, 0, 0, 0.12);
+  --ring: rgba(31, 41, 55, 0.18);
   --radius: 16px;
   --shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
   --bg-image: url("../assets/backgrounds/selection-bg.jpg");
+  --welcome-bg: #a28a73; /* beige used on Auth page / other habit pages */
+  --on-welcome: #1f1610;
+  --on-welcome-muted: #2e241c;
+  --input-on-welcome-bg: #fbf7f2;
+  --brand-brown: #4e2203;
   position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   color: var(--text);
+  isolation: isolate;
 }
 .habit-page::before {
   content: "";
@@ -19,9 +26,9 @@
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(to bottom right, rgba(255,255,255,0.70), rgba(255,255,255,0.70)),
+    linear-gradient(to bottom right, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
     var(--bg-image) center/cover no-repeat,
-    #f6f3ef;
+    #0b1220;
 }
 .habit-header {
   display: grid;
@@ -62,21 +69,22 @@
   color: #2e241c;
   opacity: 0.9;
 }
-.habit-card {
+.habit-page .habit-card {
   width: 100%;
   max-width: 720px;
-  background: rgba(255,255,255,0.8);
-  border: 1px solid var(--border);
+  background: var(--welcome-bg);
+  border: 1px solid transparent;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 20px;
-  backdrop-filter: saturate(130%) blur(6px);
+  padding: 28px;
+  color: var(--on-welcome);
 }
 .plan-title {
-  margin: 0 0 12px 0;
+  margin: 6px 0 16px 0;
   font-size: 18px;
   font-weight: 700;
-  color: #311704;
+  color: var(--on-welcome);
+  text-align: center;
 }
 .habit-form {
   display: grid;
@@ -103,26 +111,27 @@
 }
 .field {
   display: grid;
-  gap: 6px;
+  gap: 8px;
 }
 .label {
   font-size: 13px;
-  color: #311704;
-  font-weight: 700;
+  color: var(--on-welcome);
+  font-weight: 600;
 }
 .input, .select {
   appearance: none;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  background: white;
-  color: #1f2937;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--input-on-welcome-bg);
+  color: var(--on-welcome);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  accent-color: var(--brand-brown);
 }
 .input:focus, .select:focus {
   outline: none;
-  border-color: #f97316;
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.25);
+  border-color: var(--brand-brown);
+  box-shadow: 0 0 0 4px rgba(78, 34, 3, 0.20);
 }
 .inline {
   display: grid;
@@ -133,32 +142,43 @@
 .hint {
   margin: 8px 0 0 0;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--on-welcome);
 }
 .actions {
-  display: grid;
-  justify-content: start;
+  display: flex;
+  justify-content: center;
 }
 .btn {
   appearance: none;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0,0,0,0.12);
   background: var(--card);
-  color: white;
-  border-radius: 10px;
-  padding: 10px 14px;
+  color: var(--text);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   cursor: pointer;
-  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease, background 0.2s ease;
+}
+.habit-header .btn {
+  /* Ensure logout button matches Reading page button styling */
+  background: var(--card);
+  color: var(--text);
 }
 .btn:hover {
-  background: #5a2a08;
-  box-shadow: 0 0 0 6px rgba(249,115,22,0.12), var(--shadow);
+  border-color: var(--brand-brown);
+  box-shadow: 0 0 0 4px rgba(78, 34, 3, 0.20);
 }
 .btn:active {
   transform: translateY(1px);
 }
 .btn.primary {
-  background: #f97316;
-  border-color: color-mix(in srgb, #f97316, black 10%);
+  background: #5a4333;
+  border-color: #5a4333;
+  color: #fff;
 }
 .icon-btn {
   appearance: none;

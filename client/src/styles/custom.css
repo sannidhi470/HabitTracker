@@ -1,17 +1,24 @@
-/* Custom Habit page (mirrors Selection aesthetics) */
+/* Custom Habit page (match Reading setup layout) */
 .custom-page {
   --text: #1f2937;
   --muted: #475569;
-  --card: #311704;
+  --card: #ffffff;
   --border: rgba(0, 0, 0, 0.12);
+  --ring: rgba(31, 41, 55, 0.18);
   --radius: 16px;
   --shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
   --bg-image: url("../assets/backgrounds/selection-bg.jpg");
+  --welcome-bg: #a28a73;
+  --on-welcome: #1f1610;
+  --on-welcome-muted: #2e241c;
+  --input-on-welcome-bg: #fbf7f2;
+  --brand-brown: #4e2203;
   position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   color: var(--text);
+  isolation: isolate;
 }
 .custom-page::before {
   content: "";
@@ -19,9 +26,9 @@
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(to bottom right, rgba(255,255,255,0.70), rgba(255,255,255,0.70)),
+    linear-gradient(to bottom right, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
     var(--bg-image) center/cover no-repeat,
-    #f6f3ef;
+    #0b1220;
 }
 .custom-header {
   display: grid;
@@ -38,6 +45,10 @@
   font-size: 56px;
   font-weight: 400;
   color: #1f1610;
+  letter-spacing: 0.2px;
+}
+@media (min-width: 640px) {
+  .custom-brand-text { font-size: 80px; }
 }
 .custom-main {
   flex: 1;
@@ -62,67 +73,98 @@
   color: #2e241c;
   opacity: 0.9;
 }
+/* Card layout and background aligned with other habit setup pages */
 .custom-form {
   width: 100%;
-  max-width: 560px;
+  max-width: 900px;
   display: grid;
   gap: 16px;
-  background: rgba(255,255,255,0.8);
-  border: 1px solid var(--border);
+  background: var(--welcome-bg);
+  border: 1px solid transparent;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 20px;
-  backdrop-filter: saturate(130%) blur(6px);
+  padding: 28px;
+  color: var(--on-welcome);
+}
+.plan-title {
+  margin: 6px 0 16px 0;
+  font-size: 18px;
+  color: var(--on-welcome);
+  text-align: center;
+}
+.custom-plan-form {
+  display: grid;
+  gap: 16px;
+}
+.grid {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 .field {
   display: grid;
-  gap: 6px;
+  gap: 8px;
 }
 .field-label {
   font-size: 13px;
-  color: #311704;
+  color: var(--on-welcome);
   font-weight: 700;
+}
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-welcome);
 }
 .input {
   appearance: none;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  background: white;
-  color: #1f2937;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--input-on-welcome-bg);
+  color: var(--on-welcome);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  accent-color: var(--brand-brown);
 }
 .input:focus {
   outline: none;
-  border-color: #f97316;
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.25);
+  border-color: var(--brand-brown);
+  box-shadow: 0 0 0 4px rgba(78, 34, 3, 0.20);
 }
-.form-actions {
-  display: grid;
-  grid-auto-flow: column;
-  justify-content: start;
+.actions {
+  display: flex;
+  justify-content: center;
   gap: 10px;
 }
 .btn {
   appearance: none;
   border: 1px solid var(--border);
   background: var(--card);
-  color: white;
-  border-radius: 10px;
-  padding: 10px 14px;
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   cursor: pointer;
-  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease, background 0.2s ease;
 }
 .btn:hover {
-  background: #5a2a08;
-  box-shadow: 0 0 0 6px rgba(249,115,22,0.12), var(--shadow);
+  border-color: var(--brand-brown);
+  box-shadow: 0 0 0 4px rgba(78, 34, 3, 0.20);
 }
 .btn:active {
   transform: translateY(1px);
 }
 .btn.primary {
-  background: #f97316;
-  border-color: color-mix(in srgb, #f97316, black 10%);
+  background: #5a4333;
+  border-color: #5a4333;
+  color: #fff;
 }
 .btn.linklike {
   background: transparent;
@@ -148,5 +190,37 @@
   height: 18px;
   fill: currentColor;
 }
+
+/* Dark mode alignment similar to Reading */
+@media (prefers-color-scheme: dark) {
+  .custom-page {
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --card: #0f172a;
+    --border: rgba(255, 255, 255, 0.12);
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  }
+  .custom-page::before {
+    background:
+      linear-gradient(to bottom right, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
+      var(--bg-image) center/cover no-repeat,
+      #0b1220;
+  }
+}
+
+[data-theme="dark"] .custom-page {
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --card: #0f172a;
+  --border: rgba(255, 255, 255, 0.12);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .custom-page::before {
+  background:
+    linear-gradient(to bottom right, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
+    var(--bg-image) center/cover no-repeat,
+    #0b1220;
+}
+
 
 
