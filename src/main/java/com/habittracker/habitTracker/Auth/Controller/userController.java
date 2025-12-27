@@ -37,7 +37,7 @@ public class userController {
     private sessionService sessionService;
 
     @PostMapping("/google")
-    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body, HttpServletResponse response) {
         String idToken = body.get("idToken");
 
         try {
@@ -65,11 +65,26 @@ public class userController {
                 userService.saveUser(user);
             }
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("email", user.getEmail());
-            response.put("userId", user.getId());
+            // Create an authenticated session exactly like /login does (cookie-based auth)
+            boolean prod = true;
+            String token = UUID.randomUUID().toString();
+            String tokenHash = HashUtil.sha256Hex(token);
+            sessionService.saveToken(user.getId(), tokenHash);
 
-            return ResponseEntity.ok(response);
+            // Session cookie = no maxAge set (expires when browser session ends)
+            ResponseCookie cookie = ResponseCookie.from("session_token", token)
+                    .httpOnly(true)
+                    .secure(prod)
+                    .path("/")
+                    .sameSite(prod ? "None" : "Lax")
+                    .build();
+            response.addHeader("Set-Cookie", cookie.toString());
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("email", user.getEmail());
+            payload.put("userId", user.getId());
+
+            return ResponseEntity.ok(payload);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
