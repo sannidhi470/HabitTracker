@@ -55,7 +55,7 @@ public class userService {
     public User getUserByEmail(String email){
         Optional<User> user = userrepo.findByEmail(email);
         if(user.isEmpty()){
-            return null;
+            throw new RuntimeException("User not found");
         }
         return user.get();
     }
